@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.168
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template.csproj", "{3093DF57-1EF0-4E01-82FF-ACA6176D0806}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raytracer", "Raytracer.csproj", "{3093DF57-1EF0-4E01-82FF-ACA6176D0806}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
