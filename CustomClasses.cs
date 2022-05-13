@@ -76,10 +76,16 @@ namespace Raytracer
             {
                 for (int x = 0; x < screen.width; x++)
                 {
-					//Vector3 angle = new Vector3();
+					//Vector3 angle = new Vector3(x, );
                 }
             }
 		}
+		private static int ToScreenX(float x, int screenWidth, float centerOffset = 0) => (int)(screenWidth / 2 * (x + 1 + centerOffset));
+		private static int ToScreenY(float y, int screenWidth, float centerOffset = 0) => ToScreenX(-y, screenWidth, centerOffset);
+		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
+		private static float HMToObjX(int x, Template.Surface screen) => (float)x / screen.width * 2 - 1f;
+		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
+		private static float HMToObjY(int y, Template.Surface screen) => (float)y / screen.height * 2 - 1f;
 		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
 			Pos = pos;
 			Direction = direction;
