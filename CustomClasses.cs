@@ -90,7 +90,7 @@ namespace Raytracer
 		{
 
 		}
-		public abstract bool TryIntersect(Ray ray, out int d);
+		public abstract bool TryIntersect(Ray ray, out float d);
 		public abstract bool Contains(Vector3 point);
 	}
 	public class Sphere : Object
@@ -107,9 +107,26 @@ namespace Raytracer
 			this.Radius = radius;
 			this.ReflectionConstant = reflectionConstant;
 		}
-		public override bool TryIntersect(Ray ray, out int d)
+		public override bool TryIntersect(Ray ray, out float t)
 		{
-			throw new NotImplementedException();
+			Vector3 e = ray.EntryPoint;
+			Vector3 d = ray.DdirectionVect;
+			Vector3 p = Pos;
+
+			float b = 2 * (d.X * (1 + e.X - p.X) + d.Y * (1 + e.Y - p.Y) + d.Z * (1 + e.Z - p.Z));
+			float dis = b * b - 12 * (p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) +e.X * e.X + d.X *d.X + e.Y * e.Y +d.Y * d.Y +e.Z *e.Z + d.Z *d.Z -Radius * Radius);
+            if (dis == 0)
+            {
+				t = -b / 6;
+				return true;
+            }
+			else if(dis > 0)
+            {
+				t = (float)(Math.Min((-b + Math.Sqrt(dis)) / 6, (-b - Math.Sqrt(dis)) / 6));
+				return true;
+            }
+			t = 0; 
+			return false;
 		}
 		public override bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
