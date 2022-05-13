@@ -64,15 +64,21 @@ namespace Raytracer
 	#region Cameraworks
 	public static class Camera
 	{
-		public static Vector3 Pos		{ get; private set; } = Vector3.Zero;
-		public static Vector3 Direction { get; private set; } = Vector3.UnitZ;
+		public static Vector3 Pos		{ get; private set; } =  new Vector3(-10, 5, 0);
+		public static Vector3 Direction { get; private set; } = Vector3.UnitY;
 		public static float FOV			{ get; private set; } = 60;
 
 		public static List<Object> RenderedObjects = new List<Object>();
 
 		public static void Render(Template.Surface screen)
 		{
-			
+            for (int y = 0; y < screen.height; y++)
+            {
+                for (int x = 0; x < screen.width; x++)
+                {
+					//Vector3 angle = new Vector3();
+                }
+            }
 		}
 		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
 			Pos = pos;

@@ -1,4 +1,5 @@
 using Raytracer;
+using OpenTK;
 
 namespace Template
 {
@@ -9,6 +10,8 @@ namespace Template
 		// initialize
 		public void Init()
 		{
+			Sphere bigboi = new Sphere(Vector3.Zero, 3, Vector3.One);
+			Camera.RenderedObjects.Add(bigboi);
 		}
 		// tick: renders one frame
 		public void Tick()
@@ -18,6 +21,7 @@ namespace Template
 			screen.Line(2, 20, 160, 20, 0xff0000);
 
 			Camera.Render(screen);
+
 		}
 	}
 }
