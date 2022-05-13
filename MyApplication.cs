@@ -10,18 +10,15 @@ namespace Template
 		// initialize
 		public void Init()
 		{
-			Sphere bigboi = new Sphere(Vector3.Zero, 3, Vector3.One);
+			Sphere bigboi = new Sphere(new Vector3(0, 0, 20f), 0.0005f, Vector3.One);
 			Camera.RenderedObjects.Add(bigboi);
 		}
 		// tick: renders one frame
 		public void Tick()
 		{
 			screen.Clear(0);
-			screen.Print("hello world", 2, 2, 0xffffff);
-			screen.Line(2, 20, 160, 20, 0xff0000);
 
 			Camera.Render(screen);
-
 		}
 	}
 }
