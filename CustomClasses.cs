@@ -12,12 +12,12 @@ namespace Raytracer
 	public abstract class Ray
 	{
 		public Vector3 EntryPoint { get; }
-		public Vector3 DdirectionVect { get; }
+		public Vector3 DirectionVect { get; }
 
 		public Ray(Vector3 entryPoint, Vector3 direction)
 		{
 			this.EntryPoint = entryPoint;
-			this.DdirectionVect = direction;
+			this.DirectionVect = direction;
 		}
 	}
 
@@ -77,8 +77,8 @@ namespace Raytracer
 			{
 				for (int x = 0; x < screen.width; x++)
 				{
-					Vector3 angle = new Vector3(ScreenToObjX(x, screen),
-												ScreenToObjY(y, screen),
+					Vector3 angle = new Vector3(((float)x / screen.width) * 20f,//ScreenToObjX(x, screen),
+												((float)y / screen.height) *20f,//ScreenToObjY(y, screen),
 												ScreenRelativePos.Z
 					);
 					ViewRay ray = new ViewRay(Pos, angle);
@@ -134,22 +134,27 @@ namespace Raytracer
 		public override bool TryIntersect(Ray ray, out float t)
 		{
 			Vector3 e = ray.EntryPoint;
-			Vector3 d = ray.DdirectionVect;
+			Vector3 d = ray.DirectionVect;
 			Vector3 p = Pos;
 
-			float b = 2 * (d.X * (1 + e.X - p.X) + d.Y * (1 + e.Y - p.Y) + d.Z * (1 + e.Z - p.Z));
-			float dis = b * b - 12 * (p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) +e.X * e.X + d.X *d.X + e.Y * e.Y +d.Y * d.Y +e.Z *e.Z + d.Z *d.Z -Radius * Radius);
-			//t = 0;
-			//return true;
+			float a = d.X + d.Y + d.Z;
+			//float b = 2 * (d.X * (1 + e.X - p.X) + d.Y * (1 + e.Y - p.Y) + d.Z * (1 + e.Z - p.Z));
+			  float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
+			float c = p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
+			//float dis = b * b - 12 * (p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) +e.X * e.X + d.X *d.X + e.Y * e.Y +d.Y * d.Y +e.Z *e.Z + d.Z *d.Z -Radius * Radius);
+			  float dis = b * b - (4 * a * c);
 			
 			if (dis == 0)
 			{
-				t = -b / 6;
+				//t = -b / 6
+				t = -b / (2 * a);
 				return true;
 			}
-			else if(dis > 0)
+			else if (dis > 0)
 			{
-				t = (float)(Math.Min((-b + Math.Sqrt(dis)) / 6, (-b - Math.Sqrt(dis)) / 6));
+				//t = (float)(Math.Min((-b + Math.Sqrt(D)) / 6, (-b - Math.Sqrt(D)) / 6));
+				t = (float)(-b - Math.Sqrt(dis)) / (2 * a);	// uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
+															// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
 				return true;
 			}
 			t = 0; 
