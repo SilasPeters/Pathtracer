@@ -64,7 +64,7 @@ namespace Raytracer
 	#region Cameraworks
 	public static class Camera
 	{
-		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 5, -10);
+		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 0, -10);
 		public static Vector3 Direction			{ get; private set; } = Vector3.UnitX;
 		public static Vector3 ScreenRelativePos { get; private set; } = new Vector3(0, 0, 5);
 		public static float FOV					{ get; private set; } = 60;
@@ -77,8 +77,8 @@ namespace Raytracer
 			{
 				for (int x = 0; x < screen.width; x++)
 				{
-					Vector3 angle = new Vector3(((float)x / screen.width) * 20f,//ScreenToObjX(x, screen),
-												((float)y / screen.height) *20f,//ScreenToObjY(y, screen),
+					Vector3 angle = new Vector3(ScreenToObjX(x, screen),
+												ScreenToObjY(y, screen),
 												ScreenRelativePos.Z
 					);
 					ViewRay ray = new ViewRay(Pos, angle);
@@ -138,12 +138,11 @@ namespace Raytracer
 			Vector3 d = ray.DirectionVect;
 			Vector3 p = Pos;
 
-			float a = d.X + d.Y + d.Z;
-			//float b = 2 * (d.X * (1 + e.X - p.X) + d.Y * (1 + e.Y - p.Y) + d.Z * (1 + e.Z - p.Z));
-			  float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
-			float c = p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
-			//float dis = b * b - 12 * (p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) +e.X * e.X + d.X *d.X + e.Y * e.Y +d.Y * d.Y +e.Z *e.Z + d.Z *d.Z -Radius * Radius);
-			  float dis = b * b - (4 * a * c);
+			float a = d.X*d.X + d.Y*d.Y + d.Z*d.Z;
+		
+			float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
+			float c = e.X*(e.X -2*p.X) + p.X *p.X + e.Y  * (e.Y  - 2 * p.Y) + p.Y * p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z * p.Z -Radius*Radius;//p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
+			float dis = b * b - (4 * a * c);
 			
 			if (dis == 0)
 			{

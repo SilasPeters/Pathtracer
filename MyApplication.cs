@@ -10,7 +10,7 @@ namespace Template
 		// initialize
 		public void Init()
 		{
-			Sphere bigboi = new Sphere(new Vector3(1, 5, 20f), 0.005f, Vector3.One);
+			Sphere bigboi = new Sphere(new Vector3(0, 0, 0), 2f, Vector3.One);
 			Camera.RenderedObjects.Add(bigboi);
 		}
 		// tick: renders one frame
