@@ -86,6 +86,7 @@ namespace Raytracer
 					foreach (var obj in RenderedObjects)
 						if (obj.TryIntersect(ray, out float t))
 							screen.pixels[x + y * screen.width] = Colors.Blend(0, (byte)(255 - t * 60), 0);
+					
 				}
 			}
 		}
@@ -114,8 +115,8 @@ namespace Raytracer
 		{
 
 		}
-		public abstract bool TryIntersect(Ray ray, out float d);
-		public abstract bool Contains(Vector3 point);
+		public abstract bool TryIntersect(Ray ray, out float t);
+
 	}
 	public class Sphere : Object
 	{
@@ -160,12 +161,40 @@ namespace Raytracer
 			t = 0; 
 			return false;
 		}
-		public override bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
+		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
 	//public class Cube : Object
 	//{
 	//	//are we doing this?
 	//}
+	public class Plane : Object
+    {
+		private Vector3 Normal;
+		private Vector3 Pos;
+        public Plane(Vector3 normal, Vector3 pos)
+        {
+			this.Normal = normal;
+			this.Pos = pos;
+        } 
+        public override bool TryIntersect(Ray ray, out float t)
+        {
+			Vector3 e = ray.EntryPoint; 
+			Vector3 dir = ray.DirectionVect; 
+			float d = -1*(Normal.X * Pos.X+ Normal.Y * Pos.Y + Normal.Z * Pos.Z);
+			float bot = (Normal.X * dir.X + Normal.Y * dir.Y + Normal.Z * dir.Z);
+			if(bot!= 0)
+            {
+				t = (Normal.X * e.X + Normal.Y *e.Y + Normal.Z * e.Z +d)/bot;
+				return true;
+			}
+
+			else
+            {
+				t = 0;
+				return false;
+            }
+		}
+    }
 	#endregion Objects
 	#region Colors
 	public static class Colors
