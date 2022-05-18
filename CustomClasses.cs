@@ -162,28 +162,7 @@ namespace Raytracer
 		}
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
-	public class Point : Object
-    {
-		public Vector3 Pos { get; }
-		public Point(Vector3 pos)
-        {
-			this.Pos = pos;
-        }
-
-        public override bool TryIntersect(Ray ray, out float t)
-        {
-			float xLamda = ray.DdirectionVect.X / (Pos.X - ray.EntryPoint.X);
-			float yLamda = ray.DdirectionVect.Y / (Pos.Y - ray.EntryPoint.Y);
-			float zLamda = ray.DdirectionVect.Z / (Pos.Z - ray.EntryPoint.Z);
-			t = 0;
-			return (xLamda == yLamda &&  yLamda == zLamda);
-        }
-
-        public override bool Contains(Vector3 point)
-        {
-            throw new NotImplementedException();
-        }
-    }
+	
 	//public class Cube : Object
 	//{
 	//	//are we doing this?
