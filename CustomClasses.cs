@@ -96,9 +96,9 @@ namespace Raytracer
 		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
 		private static int ObjToScreenY(float y, int screenWidth, float centerOffset = 0) => ObjToScreenX(-y, screenWidth, centerOffset);
 		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width * 2 - 1f;
+		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width * 2;
 		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjY(int y, Template.Surface screen) => (float)y / screen.height * 2 - 1f;
+		private static float ScreenToObjY(int y, Template.Surface screen) => ScreenToObjX(-y, screen);
 		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
 			Pos = pos;
 			Direction = direction;
