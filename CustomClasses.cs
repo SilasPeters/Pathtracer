@@ -8,6 +8,53 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Raytracer
 {
+	#region Cameraworks
+	public static class Camera
+	{
+		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 0, -10);
+		public static Vector3 Direction			{ get; private set; } = Vector3.UnitX;
+		public static Vector3 ScreenRelativePos { get; private set; } = new Vector3(0, 0, 5);
+		public static float FOV					{ get; private set; } = 60;
+
+		public static List<Object> RenderedObjects = new List<Object>();
+
+		public static void Render(Template.Surface screen)
+		{
+			for (int y = 0; y < screen.height; y++)
+			{
+				for (int x = 0; x < screen.width; x++)
+				{
+					Vector3 angle = new Vector3(ScreenToObjX(x, screen),
+												ScreenToObjY(y, screen),
+												ScreenRelativePos.Z
+					);
+					ViewRay ray = new ViewRay(Pos, angle);
+
+					foreach (var obj in RenderedObjects)
+						if (obj.TryIntersect(ray, out float t))
+							screen.pixels[x + y * screen.width] = Colors.Blend(0, (byte)(255 - t * 60), 0);
+					
+				}
+			}
+		}
+
+		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
+		private static int ObjToScreenX(float x, Template.Surface screen, float centerOffset = 0) => (int)(screen.width / 2f * (x + 1f + centerOffset));
+		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
+		private static int ObjToScreenY(float y, Template.Surface screen, float centerOffset = 0) => ObjToScreenX(-y, screen, centerOffset);
+		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
+		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width + 1f;
+		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
+		private static float ScreenToObjY(int y, Template.Surface screen) => ScreenToObjX(-y, screen);
+		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
+			Pos = pos;
+			Direction = direction;
+			FOV = fov;
+		}
+		public static void Translate(Vector3 movement) => Pos += movement;
+		public static void Rotate(Vector3 rotation) => Direction += rotation;
+	}
+	#endregion Cameraworks
 	#region Rays
 	public abstract class Ray
 	{
@@ -61,53 +108,6 @@ namespace Raytracer
 		}
 	}
 	#endregion Lights
-	#region Cameraworks
-	public static class Camera
-	{
-		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 0, -10);
-		public static Vector3 Direction			{ get; private set; } = Vector3.UnitX;
-		public static Vector3 ScreenRelativePos { get; private set; } = new Vector3(0, 0, 5);
-		public static float FOV					{ get; private set; } = 60;
-
-		public static List<Object> RenderedObjects = new List<Object>();
-
-		public static void Render(Template.Surface screen)
-		{
-			for (int y = 0; y < screen.height; y++)
-			{
-				for (int x = 0; x < screen.width; x++)
-				{
-					Vector3 angle = new Vector3(ScreenToObjX(x, screen),
-												ScreenToObjY(y, screen),
-												ScreenRelativePos.Z
-					);
-					ViewRay ray = new ViewRay(Pos, angle);
-
-					foreach (var obj in RenderedObjects)
-						if (obj.TryIntersect(ray, out float t))
-							screen.pixels[x + y * screen.width] = Colors.Blend(0, (byte)(255 - t * 60), 0);
-					
-				}
-			}
-		}
-
-		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		private static int ObjToScreenX(float x, int screenWidth, float centerOffset = 0) => (int)(screenWidth / 2 * (x + 1 + centerOffset));
-		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		private static int ObjToScreenY(float y, int screenWidth, float centerOffset = 0) => ObjToScreenX(-y, screenWidth, centerOffset);
-		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width * 2;
-		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjY(int y, Template.Surface screen) => ScreenToObjX(-y, screen);
-		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
-			Pos = pos;
-			Direction = direction;
-			FOV = fov;
-		}
-		public static void Translate(Vector3 movement) => Pos += movement;
-		public static void Rotate(Vector3 rotation) => Direction += rotation;
-	}
-	#endregion Cameraworks
 	#region Objects
 	public abstract class Object
 	{
