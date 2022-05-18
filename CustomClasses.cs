@@ -32,7 +32,7 @@ namespace Raytracer
 
 					foreach (var obj in RenderedObjects)
 						if (obj.TryIntersect(ray, out float t))
-							screen.pixels[x + y * screen.width] = Colors.Blend(0, (byte)(255 - t * 60), 0);
+							screen.pixels[x + y * screen.width] = Colors.Make(0, (byte)Math.Max((255 - t * 60), 0), 0);
 					
 				}
 			}
@@ -169,8 +169,8 @@ namespace Raytracer
 	//}
 	public class Plane : Object
     {
-		private Vector3 Normal;
-		private Vector3 Pos;
+		protected Vector3 Normal;
+		protected Vector3 Pos;
         public Plane(Vector3 normal, Vector3 pos)
         {
 			this.Normal = normal;
@@ -187,7 +187,6 @@ namespace Raytracer
 				t = (Normal.X * e.X + Normal.Y *e.Y + Normal.Z * e.Z +d)/bot;
 				return true;
 			}
-
 			else
             {
 				t = 0;
@@ -195,11 +194,35 @@ namespace Raytracer
             }
 		}
     }
-	#endregion Objects
-	#region Colors
-	public static class Colors
+    public class FinPlane : Plane
+    {
+		Vector3 Min;
+		Vector3 Max;
+        public FinPlane(Vector3 normal, Vector3 pos, Vector3 min, Vector3 max) : base(normal, pos)
+        {
+			this.Min = min;
+			this.Max = max;
+        }
+        public override bool TryIntersect(Ray ray, out float t)
+        {
+			
+            if(base.TryIntersect(ray, out t))
+            {
+				if(t<= 1)
+                {
+					//Console.WriteLine(t);
+					return true;
+                }
+            }
+			t = 0;
+			return false;
+        }
+    }
+    #endregion Objects
+    #region Colors
+    public static class Colors
 	{
-		public static int Blend(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
+		public static int Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
 		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
 	}
 	#endregion Colors
