@@ -12,12 +12,15 @@ namespace Raytracer
 	public static class Camera
 	{
 		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 0, -10);
-		public static Vector3 Direction			{ get; private set; } = Vector3.UnitX;
-		public static Vector3 ScreenRelativePos { get; private set; } = new Vector3(0, 0, 5);
-		public static float FOV					{ get; private set; } = 60;
+		public static Vector3 LookDirection		{ get; private set; } = new Vector3(0, 0, 1);
+		public static Vector3 UpDirection		{ get; private set; } = new Vector3(0, 1, 0);
 
 		public static List<Object> RenderedObjects = new List<Object>();
 
+		public static void MoveCam(int x, int y, int z)
+		{
+			Pos = new Vector3(Pos.X + x, Pos.Y + y, Pos.Z + z);
+		}
 		public static void Render(Template.Surface screen)
 		{
 			for (int y = 0; y < screen.height; y++)
@@ -46,13 +49,12 @@ namespace Raytracer
 		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width + 1f;
 		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
 		private static float ScreenToObjY(int y, Template.Surface screen) => ScreenToObjX(-y, screen);
-		public static void Set(Vector3 pos, Vector3 direction, float fov = 60) {
+		public static void Set(Vector3 pos, Vector3 direction) {
 			Pos = pos;
-			Direction = direction;
-			FOV = fov;
+			LookDirection = direction;
 		}
 		public static void Translate(Vector3 movement) => Pos += movement;
-		public static void Rotate(Vector3 rotation) => Direction += rotation;
+		public static void Rotate(Vector3 rotation) => LookDirection += rotation;
 	}
 	#endregion Cameraworks
 	#region Rays
