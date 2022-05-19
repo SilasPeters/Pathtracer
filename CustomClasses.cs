@@ -8,55 +8,6 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Raytracer
 {
-	#region Cameraworks
-	public static class Camera
-	{
-		public static Vector3 Pos				{ get; private set; } = new Vector3(0, 0, -10);
-		public static Vector3 LookDirection		{ get; private set; } = new Vector3(0, 0, 1);
-		public static Vector3 UpDirection		{ get; private set; } = new Vector3(0, 1, 0);
-
-		public static List<Object> RenderedObjects = new List<Object>();
-
-		public static void MoveCam(int x, int y, int z)
-		{
-			Pos = new Vector3(Pos.X + x, Pos.Y + y, Pos.Z + z);
-		}
-		public static void Render(Template.Surface screen)
-		{
-			for (int y = 0; y < screen.height; y++)
-			{
-				for (int x = 0; x < screen.width; x++)
-				{
-					Vector3 angle = new Vector3(ScreenToObjX(x, screen),
-												ScreenToObjY(y, screen),
-												ScreenRelativePos.Z
-					);
-					ViewRay ray = new ViewRay(Pos, angle);
-
-					foreach (var obj in RenderedObjects)
-						if (obj.TryIntersect(ray, out float t))
-							screen.pixels[x + y * screen.width] = Colors.Make(0, (byte)Math.Max((255 - t * 60), 0), 0);
-					
-				}
-			}
-		}
-
-		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		private static int ObjToScreenX(float x, Template.Surface screen, float centerOffset = 0) => (int)(screen.width / 2f * (x + 1f + centerOffset));
-		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		private static int ObjToScreenY(float y, Template.Surface screen, float centerOffset = 0) => ObjToScreenX(-y, screen, centerOffset);
-		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjX(int x, Template.Surface screen) => (float)x / screen.width + 1f;
-		///<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		private static float ScreenToObjY(int y, Template.Surface screen) => ScreenToObjX(-y, screen);
-		public static void Set(Vector3 pos, Vector3 direction) {
-			Pos = pos;
-			LookDirection = direction;
-		}
-		public static void Translate(Vector3 movement) => Pos += movement;
-		public static void Rotate(Vector3 rotation) => LookDirection += rotation;
-	}
-	#endregion Cameraworks
 	#region Rays
 	public abstract class Ray
 	{
@@ -66,7 +17,7 @@ namespace Raytracer
 		public Ray(Vector3 entryPoint, Vector3 direction)
 		{
 			this.EntryPoint = entryPoint;
-			this.DirectionVect = direction;
+			this.DirectionVect = direction.Normalized();
 		}
 	}
 
@@ -113,11 +64,12 @@ namespace Raytracer
 	#region Objects
 	public abstract class Object
 	{
-		public Object()
-		{
+		//public Object()
+		//{
 
-		}
-		public abstract bool TryIntersect(Ray ray, out float t);
+		//}
+		public abstract bool TryIntersect(Ray ray, out IntersectionInfo ii);
+		//todo: normal vector is always to the outside (REFRACTION)
 
 	}
 	public class Sphere : Object
@@ -134,32 +86,38 @@ namespace Raytracer
 			this.Radius = radius;
 			this.ReflectionConstant = reflectionConstant;
 		}
-		public override bool TryIntersect(Ray ray, out float t)
+		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
 			Vector3 e = ray.EntryPoint;
 			Vector3 d = ray.DirectionVect;
 			Vector3 p = Pos;
 
 			float a = d.X*d.X + d.Y*d.Y + d.Z*d.Z;
-		
 			float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
 			float c = e.X*(e.X -2*p.X) + p.X *p.X + e.Y  * (e.Y  - 2 * p.Y) + p.Y * p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z * p.Z -Radius*Radius;//p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
 			float dis = b * b - (4 * a * c);
 			
 			if (dis == 0)
 			{
-				//t = -b / 6
-				t = -b / (2 * a);
+				float t = -b / (2 * a);
+
+				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
+				Vector3 normal = (intPoint - Pos).Normalized();
+
+				ii = new IntersectionInfo(intPoint, normal);
 				return true;
 			}
 			else if (dis > 0)
 			{
-				//t = (float)(Math.Min((-b + Math.Sqrt(D)) / 6, (-b - Math.Sqrt(D)) / 6));
-				t = (float)(-b - Math.Sqrt(dis)) / (2 * a);	// uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
-															// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
+				float t = (float)(-b - Math.Sqrt(dis)) / (2 * a); // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
+																  // wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
+				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
+				Vector3 normal = (intPoint - Pos).Normalized();
+
+				ii = new IntersectionInfo(intPoint, normal);
 				return true;
 			}
-			t = 0; 
+			ii = IntersectionInfo.None; 
 			return false;
 		}
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
@@ -170,62 +128,83 @@ namespace Raytracer
 	//	//are we doing this?
 	//}
 	public class Plane : Object
-    {
+	{
 		protected Vector3 Normal;
 		protected Vector3 Pos;
-        public Plane(Vector3 normal, Vector3 pos)
-        {
+		public Plane(Vector3 normal, Vector3 pos)
+		{
 			this.Normal = normal;
 			this.Pos = pos;
-        } 
-        public override bool TryIntersect(Ray ray, out float t)
-        {
+		} 
+		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
+		{
 			Vector3 e = ray.EntryPoint; 
 			Vector3 dir = ray.DirectionVect; 
 			float d = -1*(Normal.X * Pos.X+ Normal.Y * Pos.Y + Normal.Z * Pos.Z);
 			float bot = (Normal.X * dir.X + Normal.Y * dir.Y + Normal.Z * dir.Z);
-			if(bot!= 0)
-            {
-				t = (Normal.X * e.X + Normal.Y *e.Y + Normal.Z * e.Z +d)/bot;
+
+			if (bot != 0)
+			{
+				float t = (Normal.X * e.X + Normal.Y *e.Y + Normal.Z * e.Z +d)/bot;
+
+				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
+				ii = new IntersectionInfo(intPoint, Normal);
 				return true;
 			}
 			else
-            {
-				t = 0;
+			{
+				ii = IntersectionInfo.None;
 				return false;
-            }
+			}
 		}
-    }
-    public class FinPlane : Plane
-    {
+	}
+	public class FinPlane : Plane
+	{
 		Vector3 Min;
 		Vector3 Max;
-        public FinPlane(Vector3 normal, Vector3 pos, Vector3 min, Vector3 max) : base(normal, pos)
-        {
+		public FinPlane(Vector3 normal, Vector3 pos, Vector3 min, Vector3 max) : base(normal, pos)
+		{
 			this.Min = min;
 			this.Max = max;
-        }
-        public override bool TryIntersect(Ray ray, out float t)
-        {
+		}
+		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
+		{
 			
-            if(base.TryIntersect(ray, out t))
-            {
-				if(t<= 1)
-                {
+			if(base.TryIntersect(ray, out ii))
+			{
+				if((ii.IntPoint - Pos).LengthSquared <= 1 * 1)
+				{
 					//Console.WriteLine(t);
 					return true;
-                }
-            }
-			t = 0;
+				}
+			}
+			ii = IntersectionInfo.None;
 			return false;
-        }
-    }
-    #endregion Objects
-    #region Colors
-    public static class Colors
+		}
+	}
+	#endregion Objects
+	#region Colors
+	public static class Colors
 	{
 		public static int Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
 		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
 	}
 	#endregion Colors
+	#region Intersection
+	public class IntersectionInfo
+	{
+		public Vector3 IntPoint;
+		public Vector3 Normal;
+
+		public const IntersectionInfo None = null;
+
+		public IntersectionInfo(Vector3 IntPoint, Vector3 Normal)
+		{
+			this.IntPoint = IntPoint;
+			this.Normal = Normal;
+		}
+
+		public override string ToString() => $"IntPoint: {IntPoint}, Normal: {Normal}";
+	}
+	#endregion Intersection
 }

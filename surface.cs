@@ -5,22 +5,22 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Template
 {
-	public class Surface
+	public class Display
 	{
 		public int width, height;
 		public int[] pixels;
 		static bool fontReady = false;
-		static Surface font;
+		static Display font;
 		static int[] fontRedir;
 		// surface constructor
-		public Surface( int w, int h )
+		public Display( int w, int h )
 		{
 			width = w;
 			height = h;
 			pixels = new int[w * h];
 		}
 		// surface constructor using a file
-		public Surface( string fileName )
+		public Display( string fileName )
 		{
 			Bitmap bmp = new Bitmap( fileName );
 			width = bmp.Width;
@@ -47,7 +47,7 @@ namespace Template
 			for( int s = width * height, p = 0; p < s; p++ ) pixels[p] = c;
 		}
 		// copy the surface to another surface
-		public void CopyTo( Surface target, int x = 0, int y = 0 )
+		public void CopyTo( Display target, int x = 0, int y = 0 )
 		{
 			int src = 0;
 			int dst = 0;
@@ -175,7 +175,7 @@ namespace Template
 		{
 			if( !fontReady )
 			{
-				font = new Surface( "../../assets/font.png" );
+				font = new Display( "../../assets/font.png" );
 				string ch = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+={}[];:<>,.?/\\ ";
 				fontRedir = new int[256];
 				for( int i = 0; i < 256; i++ ) fontRedir[i] = 0;
@@ -200,13 +200,13 @@ namespace Template
 	}
 	public class Sprite
 	{
-		Surface bitmap;
-		static public Surface target;
+		Display bitmap;
+		static public Display target;
 		int textureID;
 		// sprite constructor
 		public Sprite( string fileName )
 		{
-			bitmap = new Surface( fileName );
+			bitmap = new Display( fileName );
 			textureID = bitmap.GenTexture();
 		}
 		// draw a sprite with scaling

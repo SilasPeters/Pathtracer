@@ -35,9 +35,9 @@ namespace Template
 			GL.Hint( HintTarget.PerspectiveCorrectionHint, HintMode.Nicest );
 			ClientSize = new Size( 640, 400 );
 			app = new MyApplication();
-			app.screen = new Surface( Width, Height );
-			Sprite.target = app.screen;
-			screenID = app.screen.GenTexture();
+			app.Display = new Display( Width, Height );
+			Sprite.target = app.Display;
+			screenID = app.Display.GenTexture();
 			app.Init();
 		}
 		protected override void OnUnload( EventArgs e )
@@ -72,9 +72,9 @@ namespace Template
 			// convert MyApplication.screen to OpenGL texture
 			GL.BindTexture( TextureTarget.Texture2D, screenID );
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
-						   app.screen.width, app.screen.height, 0,
+						   app.Display.width, app.Display.height, 0,
 						   OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
-						   PixelType.UnsignedByte, app.screen.pixels
+						   PixelType.UnsignedByte, app.Display.pixels
 						 );
 			// draw screen filling quad
 			GL.Begin( PrimitiveType.Quads );
