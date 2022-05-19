@@ -74,24 +74,16 @@ namespace Raytracer
 													   Screen.HalfUp	*  (halfH - y)/halfH +
 													   Vector3.UnitZ
 												  );
-					
-					if (scene.TryIntersect(viewRay, out IntersectionInfo ii)) {
+
+					if (scene.TryIntersect(viewRay, out IntersectionInfo ii))
+					{
 						//Console.WriteLine(ii.ToString());
 						display.pixels[x + y * display.width] = 0x00ff00;
 					}
+					else
+						display.pixels[x + y * display.width] = 0xff00ff;
 				}
 		}
-
-
-
-		///<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		//private static int ObjToScreenX(float x, Surface screen, float centerOffset = 0) => (int)(screen.width / 2f * (x + 1f + centerOffset));
-		/////<summary>Methode voor het omzetten van object-space naar screenspace coordinaten</summary>
-		//private static int ObjToScreenY(float y, Surface screen, float centerOffset = 0) => ObjToScreenX(-y, screen, centerOffset);
-		/////<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		//private static float ScreenToObjX(int x, Surface screen) => (float)x / screen.width + 1f;
-		/////<summary>Methode voor het omzetten van screencoordinates naar object-space coordinaten</summary>
-		//private static float ScreenToObjY(int y, Surface screen) => ScreenToObjX(-y, screen);
 
 		public static void Set(Screen screen, Vector3 pos, Vector3 lookDirection, Vector3 upDirection)
 		{

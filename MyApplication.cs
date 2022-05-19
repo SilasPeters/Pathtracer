@@ -11,11 +11,11 @@ namespace Template
 		{
 			Scene scene = new Scene();
 			scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2, Vector3.One));
-
+			//scene.AddObject(new Plane(Vector3.UnitY, new Vector3(0, 5f, 0)));
 
 			Screen screen = new Screen(new Vector3(1, 0, 0), new Vector3(0, (float)Display.height/Display.width, 0));
 			Raytracer.Raytracer.Set(scene, Display);
-			Camera.Set(screen, new Vector3(0, 0, -10), Vector3.UnitZ, Vector3.UnitY);
+			Camera.Set(screen, new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY);
 		}
 		
 		public void Tick()

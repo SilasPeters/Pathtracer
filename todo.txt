@@ -1,0 +1,11 @@
+camera werkt op een ass-split manier - screen plane -> ScreenToObjX gekloot
+scene
+debug output
+plane testen
+renderer
+intersection struct
+cam -> raytracer
+
+classes maken:
+up-direction cam
+light uitbreiden

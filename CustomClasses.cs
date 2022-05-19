@@ -138,14 +138,12 @@ namespace Raytracer
 		} 
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			Vector3 e = ray.EntryPoint; 
-			Vector3 dir = ray.DirectionVect; 
-			float d = -1*(Normal.X * Pos.X+ Normal.Y * Pos.Y + Normal.Z * Pos.Z);
-			float bot = (Normal.X * dir.X + Normal.Y * dir.Y + Normal.Z * dir.Z);
+			/*float d = -Vector3.Dot(Normal, Pos);
+			float bot = Vector3.Dot(Normal, ray.DirectionVect);
 
 			if (bot != 0)
 			{
-				float t = (Normal.X * e.X + Normal.Y *e.Y + Normal.Z * e.Z +d)/bot;
+				float t = (Vector3.Dot(Normal, ray.EntryPoint) + d)/bot;
 
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				ii = new IntersectionInfo(intPoint, Normal);
@@ -155,7 +153,21 @@ namespace Raytracer
 			{
 				ii = IntersectionInfo.None;
 				return false;
+			}*/
+
+			// assuming vectors are all normalized
+			float denom = Vector3.Dot(Normal, ray.DirectionVect);
+			if (denom > 1e-6)
+			{
+				Vector3 p0l0 = Pos - ray.EntryPoint;
+				float t = Vector3.Dot(p0l0, Normal) / denom;
+				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal); //todo: krom
+				return (t >= 0);
 			}
+
+			ii = IntersectionInfo.None;
+			return false;
+			
 		}
 	}
 	public class FinPlane : Plane
@@ -195,6 +207,7 @@ namespace Raytracer
 	{
 		public Vector3 IntPoint;
 		public Vector3 Normal;
+		public float distance => (IntPoint - Camera.Pos).Length;
 
 		public const IntersectionInfo None = null;
 
