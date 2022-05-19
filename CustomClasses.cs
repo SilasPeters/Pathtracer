@@ -13,35 +13,14 @@ namespace Raytracer
 	{
 		public Vector3 EntryPoint { get; }
 		public Vector3 DirectionVect { get; }
+		public float t { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
+								//todo: in intersection zetten?
+		float freq;
 
 		public Ray(Vector3 entryPoint, Vector3 direction)
 		{
 			this.EntryPoint = entryPoint;
 			this.DirectionVect = direction.Normalized();
-		}
-	}
-
-	public class LightRay : Ray
-	{
-		float freq;
-
-		public LightRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
-		}
-	}
-	public class ViewRay : Ray
-	{
-		public ViewRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
-		}
-	}
-	public class ShadowRay : Ray
-	{
-		public ShadowRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
 		}
 	}
 
@@ -91,7 +70,7 @@ namespace Raytracer
 			Vector3 e = ray.EntryPoint;
 			Vector3 d = ray.DirectionVect;
 			Vector3 p = Pos;
-
+			//TODO: fast ray intersection
 			float a = d.X*d.X + d.Y*d.Y + d.Z*d.Z;
 			float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
 			float c = e.X*(e.X -2*p.X) + p.X *p.X + e.Y  * (e.Y  - 2 * p.Y) + p.Y * p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z * p.Z -Radius*Radius;//p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;

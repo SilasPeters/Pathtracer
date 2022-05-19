@@ -70,7 +70,7 @@ namespace Raytracer
 			for (int y = 0; y < display.height; y++)
 				for (int x = 0; x < display.width; x++)
 				{
-					ViewRay viewRay = new ViewRay(Pos, Screen.HalfRight	* -(halfW - x)/halfW +
+					Ray viewRay = new Ray(Pos, Screen.HalfRight	* -(halfW - x)/halfW +
 													   Screen.HalfUp	*  (halfH - y)/halfH +
 													   Vector3.UnitZ
 												  );
