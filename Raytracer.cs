@@ -27,22 +27,34 @@ namespace Raytracer
 
 	public class Scene
 	{
-		private IList<Object> renderedObjects = new List<Object>();
-		private IList<LightSource> lightSources = new List<LightSource>();
+		public IList<Object> renderedObjects = new List<Object>();
+		public IList<LightSource> lightSources = new List<LightSource>();
 
 		public void AddObject(Object o) => renderedObjects.Add(o);
 		public void AddLight(LightSource o) => lightSources.Add(o);
 
-		public bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
+		public bool TryIntersect(Ray ray, Object obj, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
 		{
-			foreach (Object obj in renderedObjects)
-				if (obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii))
-					return true;
+			if (obj.TryIntersect(ray, obj, out iiiiiiiiiiiiiiiiiii))
+				return true;
+
 
 			iiiiiiiiiiiiiiiiiii = IntersectionInfo.None;
 			return false;
 		}
-	}
+
+        internal bool isLit(IntersectionInfo i, out IntersectionInfo ii)
+        {
+			//TODO: make recursive for reflective surfaces
+			foreach(LightSource ls in lightSources)
+            {
+				Vector3 ray = new Vector3(ls.Pos - i.IntPoint);
+				ii = IntersectionInfo.None;
+				TryIntersect(ray, i.);
+			}
+			
+        }
+    }
 
 	public class Screen
 	{
@@ -71,18 +83,22 @@ namespace Raytracer
 				for (int x = 0; x < display.width; x++)
 				{
 					Ray viewRay = new Ray(Pos, Screen.HalfRight	* -(halfW - x)/halfW +
-													   Screen.HalfUp	*  (halfH - y)/halfH +
-													   Vector3.UnitZ
-												  );
-
-					if (scene.TryIntersect(viewRay, out IntersectionInfo ii))
+											   Screen.HalfUp	*  (halfH - y)/halfH +
+											   Vector3.UnitZ
+										  );
+					foreach (Object obj in scene.renderedObjects)
 					{
-						//Console.WriteLine(ii.ToString());
-						display.pixels[x + y * display.width] = 0x00ff00;
+						if (scene.TryIntersect(viewRay, obj, out IntersectionInfo ii))
+						{
+							if (scene.isLit(ii, out IntersectionInfo iii))
+							{
+								display.pixels[x + y * display.width] = 0x00ff00;
+							}
+						}
 					}
-					else
-						display.pixels[x + y * display.width] = 0xff00ff;
+						
 				}
+				
 		}
 
 		public static void Set(Screen screen, Vector3 pos, Vector3 lookDirection, Vector3 upDirection)

@@ -9,7 +9,7 @@ using OpenTK.Graphics.OpenGL;
 namespace Raytracer
 {
 	#region Rays
-	public abstract class Ray
+	public class Ray
 	{
 		public Vector3 EntryPoint { get; }
 		public Vector3 DirectionVect { get; }
@@ -43,29 +43,30 @@ namespace Raytracer
 	#region Objects
 	public abstract class Object
 	{
-		//public Object()
-		//{
+		public Vector3 Pos { get; set; }
+		public Vector3 ReflectionConstant { get; set; }
 
-		//}
-		public abstract bool TryIntersect(Ray ray, out IntersectionInfo ii);
+		/// <param name="reflectionConstant">Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</param>
+		public Object(Vector3 pos)
+		{
+			Pos = pos;
+		}
+		public abstract bool TryIntersect(Ray ray, Object obj, out IntersectionInfo ii);
 		//todo: normal vector is always to the outside (REFRACTION)
 
 	}
 	public class Sphere : Object
 	{
-		public Vector3 Pos { get; }
 		public float Radius { get; }
 		/// <summary>Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</summary>
-		public Vector3 ReflectionConstant { get; }
 
-		/// <param name="reflectionConstant">Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</param>
-		public Sphere(Vector3 pos, float radius, Vector3 reflectionConstant)
+		public Sphere(Vector3 pos, float radius, Vector3 reflectionConstant) : base(pos)
 		{
 			this.Pos = pos;
 			this.Radius = radius;
 			this.ReflectionConstant = reflectionConstant;
 		}
-		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
+		public override bool TryIntersect(Ray ray, Object obj, out IntersectionInfo ii)
 		{
 			Vector3 e = ray.EntryPoint;
 			Vector3 d = ray.DirectionVect;
@@ -83,7 +84,7 @@ namespace Raytracer
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				Vector3 normal = (intPoint - Pos).Normalized();
 
-				ii = new IntersectionInfo(intPoint, normal);
+				ii = new IntersectionInfo(intPoint, normal, obj);
 				return true;
 			}
 			else if (dis > 0)
@@ -93,7 +94,7 @@ namespace Raytracer
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				Vector3 normal = (intPoint - Pos).Normalized();
 
-				ii = new IntersectionInfo(intPoint, normal);
+				ii = new IntersectionInfo(intPoint, normal, obj);
 				return true;
 			}
 			ii = IntersectionInfo.None; 
@@ -110,12 +111,12 @@ namespace Raytracer
 	{
 		protected Vector3 Normal;
 		protected Vector3 Pos;
-		public Plane(Vector3 normal, Vector3 pos)
+		public Plane(Vector3 normal, Vector3 pos) : base(pos)
 		{
 			this.Normal = normal;
 			this.Pos = pos;
 		} 
-		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
+		public override bool TryIntersect(Ray ray, Object obj, out IntersectionInfo ii)
 		{
 			/*float d = -Vector3.Dot(Normal, Pos);
 			float bot = Vector3.Dot(Normal, ray.DirectionVect);
@@ -140,7 +141,7 @@ namespace Raytracer
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
 				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal); //todo: krom
+				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal, obj); //todo: krom
 				return (t >= 0);
 			}
 
@@ -158,14 +159,13 @@ namespace Raytracer
 			this.Min = min;
 			this.Max = max;
 		}
-		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
+		public override bool TryIntersect(Ray ray, Object obj, out IntersectionInfo ii)
 		{
 			
-			if(base.TryIntersect(ray, out ii))
+			if(base.TryIntersect(ray, obj, out ii))
 			{
 				if((ii.IntPoint - Pos).LengthSquared <= 1 * 1)
 				{
-					//Console.WriteLine(t);
 					return true;
 				}
 			}
@@ -186,12 +186,14 @@ namespace Raytracer
 	{
 		public Vector3 IntPoint;
 		public Vector3 Normal;
+		public Object Object;
 		public float distance => (IntPoint - Camera.Pos).Length;
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(Vector3 IntPoint, Vector3 Normal)
+		public IntersectionInfo(Vector3 IntPoint, Vector3 Normal, Object obj)
 		{
+			this.Object = obj;
 			this.IntPoint = IntPoint;
 			this.Normal = Normal;
 		}
