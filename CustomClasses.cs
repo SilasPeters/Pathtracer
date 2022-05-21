@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace Raytracer
+namespace EpicRaytracer
 {
 	#region Rays
 	public abstract class Ray
 	{
-		public Vector3 EntryPoint { get; }
-		public Vector3 DirectionVect { get; }
+		public Vector3 EntryPoint    { get; protected set; }
+		public Vector3 DirectionVect { get; set; }
 
 		public Ray(Vector3 entryPoint, Vector3 direction)
 		{
@@ -35,6 +35,12 @@ namespace Raytracer
 		public ViewRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
 		{
 
+		}
+
+		public void Set(Vector3 entryPoint, Vector3 direction)
+		{
+			EntryPoint    = entryPoint;
+			DirectionVect = direction;
 		}
 	}
 	public class ShadowRay : Ray
@@ -138,7 +144,7 @@ namespace Raytracer
 		} 
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			/*float d = -Vector3.Dot(Normal, Pos);
+			float d = -Vector3.Dot(Normal, Pos);
 			float bot = Vector3.Dot(Normal, ray.DirectionVect);
 
 			if (bot != 0)
@@ -153,7 +159,7 @@ namespace Raytracer
 			{
 				ii = IntersectionInfo.None;
 				return false;
-			}*/
+			}
 
 			// assuming vectors are all normalized
 			float denom = Vector3.Dot(Normal, ray.DirectionVect);
@@ -207,7 +213,6 @@ namespace Raytracer
 	{
 		public Vector3 IntPoint;
 		public Vector3 Normal;
-		public float distance => (IntPoint - Camera.Pos).Length;
 
 		public const IntersectionInfo None = null;
 
@@ -217,7 +222,7 @@ namespace Raytracer
 			this.Normal = Normal;
 		}
 
-		public override string ToString() => $"IntPoint: {IntPoint}, Normal: {Normal}";
+		public override string ToString() => $"IntPoint: {IntPoint.ToString()}, Normal: {Normal.ToString()}";
 	}
 	#endregion Intersection
 }

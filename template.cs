@@ -24,7 +24,6 @@ namespace Template
 	public class OpenTKApp : GameWindow
 	{
 		static int screenID;            // unique integer identifier of the OpenGL texture
-		static MyApplication app;       // instance of the application
 		static bool terminated = false; // application terminates gracefully when this is true
 		protected override void OnLoad( EventArgs e )
 		{
@@ -33,12 +32,11 @@ namespace Template
 			GL.Enable( EnableCap.Texture2D );
 			GL.Disable( EnableCap.DepthTest );
 			GL.Hint( HintTarget.PerspectiveCorrectionHint, HintMode.Nicest );
-			ClientSize = new Size( 640, 400 );
-			app = new MyApplication();
-			app.Display = new Display( Width, Height );
-			Sprite.target = app.Display;
-			screenID = app.Display.GenTexture();
-			app.Init();
+			ClientSize            = new Size( 800, 400 );
+			MyApplication.Display = new Display( Width, Height );
+			Sprite.target         = MyApplication.Display;
+			screenID              = MyApplication.Display.GenTexture();
+			MyApplication.Init();
 		}
 		protected override void OnUnload( EventArgs e )
 		{
@@ -63,7 +61,7 @@ namespace Template
 		protected override void OnRenderFrame( FrameEventArgs e )
 		{
 			// called once per frame; render
-			app.Tick();
+			MyApplication.Tick();
 			if( terminated )
 			{
 				Exit();
@@ -72,9 +70,9 @@ namespace Template
 			// convert MyApplication.screen to OpenGL texture
 			GL.BindTexture( TextureTarget.Texture2D, screenID );
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
-						   app.Display.width, app.Display.height, 0,
+						   MyApplication.Display.width, MyApplication.Display.height, 0,
 						   OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
-						   PixelType.UnsignedByte, app.Display.pixels
+						   PixelType.UnsignedByte, MyApplication.Display.pixels
 						 );
 			// draw screen filling quad
 			GL.Begin( PrimitiveType.Quads );
