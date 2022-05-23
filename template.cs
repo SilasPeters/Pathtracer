@@ -87,7 +87,7 @@ namespace Template
 		public static void Main( string[] args )
 		{
 			// entry point
-			using( OpenTKApp app = new OpenTKApp() ) { app.Run( 30.0, 0.0 ); }
+			using( OpenTKApp app = new OpenTKApp() ) { app.Run( 60.0, 0.0 ); }
 		}
 	}
 }

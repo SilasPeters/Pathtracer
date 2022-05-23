@@ -16,7 +16,7 @@ namespace Template
 		public static void Init()
 		{
 			Scene scene = new Scene();
-			scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2, Vector3.One));
+			scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2f, Vector3.One));
 			scene.AddLight(new LightSource(new Vector3(0, 5, 0), 1, 1));
 			//scene.AddObject(new Plane(Vector3.UnitY, new Vector3(0, 5f, 0)));
 

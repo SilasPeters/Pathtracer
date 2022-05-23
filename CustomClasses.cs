@@ -9,7 +9,6 @@ using OpenTK.Graphics.OpenGL;
 
 namespace EpicRaytracer
 {
-	#region Rays
 	public struct Ray
 	{
 		public Vector3 EntryPoint    { get; set; }
@@ -29,47 +28,42 @@ namespace EpicRaytracer
 			DirectionVect = direction;
 		}
 	}
-	#endregion Rays
-	#region Lights
+	
 	public class LightSource
 	{
-		public Vector3 Pos { get; }
-		public float Intensity { get; }
-		public float Freq { get; }
+		public Vector3 Pos       { get; }
+		public float   Intensity { get; }
+		public float   Freq      { get; }
 
-		public LightSource(Vector3 pos, float intensity, float freq)
-		{
-			this.Pos = pos;
+		public LightSource(Vector3 pos, float intensity, float freq) {
+			this.Pos       = pos;
 			this.Intensity = intensity;
-			this.Freq = freq;
+			this.Freq      = freq;
 		}
 	}
-	#endregion Lights
+	
 	#region Objects
 	public abstract class Object
 	{
-		//public Object()
-		//{
-
-		//}
-		public abstract bool TryIntersect(Ray ray, out IntersectionInfo ii);
-		//todo: normal vector is always to the outside (REFRACTION)
-
-	}
-	public class Sphere : Object
-	{
-		public Vector3 Pos { get; }
-		public float Radius { get; }
-		/// <summary>Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</summary>
+		public Vector3 Pos                { get; }
 		public Vector3 ReflectionConstant { get; }
 
 		/// <param name="reflectionConstant">Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</param>
-		public Sphere(Vector3 pos, float radius, Vector3 reflectionConstant)
-		{
-			this.Pos = pos;
-			this.Radius = radius;
-			this.ReflectionConstant = reflectionConstant;
+		protected Object(Vector3 pos, Vector3 reflectionConstant) {
+			Pos                = pos;
+			ReflectionConstant = reflectionConstant;
 		}
+
+		public abstract bool TryIntersect(Ray ray, out IntersectionInfo ii);
+		//todo: normal vector is always to the outside (REFRACTION)
+	}
+	public class Sphere : Object
+	{
+		public float Radius { get; }
+		public Sphere(Vector3 pos, float radius, Vector3 reflectionConstant) : base(pos, reflectionConstant) {
+			Radius = radius;
+		}
+		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
 			Vector3 e = ray.EntryPoint;
@@ -107,19 +101,16 @@ namespace EpicRaytracer
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
 	
-	//public class Cube : Object
-	//{
-	//	//are we doing this?
-	//}
 	public class Plane : Object
 	{
-		protected Vector3 Normal;
 		protected Vector3 Pos;
-		public Plane(Vector3 normal, Vector3 pos)
-		{
-			this.Normal = normal;
-			this.Pos = pos;
-		} 
+		protected Vector3 Normal;
+
+		public Plane(Vector3 pos, Vector3 normal, Vector3 reflectionConstant) : base(pos, reflectionConstant) {
+			Normal = normal;
+			Pos    = pos;
+		}
+
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
 			/*float d = -Vector3.Dot(Normal, Pos);
@@ -158,14 +149,13 @@ namespace EpicRaytracer
 	{
 		Vector3 Min;
 		Vector3 Max;
-		public FinPlane(Vector3 normal, Vector3 pos, Vector3 min, Vector3 max) : base(normal, pos)
-		{
+		public FinPlane(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Vector3 reflectionConstant) : base(pos, normal, reflectionConstant) {
 			this.Min = min;
 			this.Max = max;
 		}
+		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			
 			if(base.TryIntersect(ray, out ii))
 			{
 				if((ii.IntPoint - Pos).LengthSquared <= 1 * 1)
@@ -179,29 +169,28 @@ namespace EpicRaytracer
 		}
 	}
 	#endregion Objects
-	#region Colors
+	
 	public static class Colors
 	{
-		public static int Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
+		public static int    Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
+		//public static int    Make(Vector3 vec) => Make(vec.X, vec.Y, vec.Z);
 		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
 	}
-	#endregion Colors
-	#region Intersection
+	
 	public class IntersectionInfo
 	{
 		public Vector3 IntPoint;
 		public Vector3 Normal;
-		public Object Object;
+		//public Object Object;
 
 		public const IntersectionInfo None = null;
 
 		public IntersectionInfo(Vector3 IntPoint, Vector3 Normal)
 		{
 			this.IntPoint = IntPoint;
-			this.Normal = Normal;
+			this.Normal   = Normal;
 		}
 
 		public override string ToString() => $"IntPoint: {IntPoint}, Normal: {Normal}";
 	}
-	#endregion Intersection
 }
