@@ -7,29 +7,28 @@ using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace Raytracer
+namespace EpicRaytracer
 {
 	#region Rays
-	public abstract class Ray
+	public struct Ray
 	{
-		public Vector3 EntryPoint { get; protected set; }
-		public Vector3 DirectionVect { get; protected set; }
-		public float t { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
-								//todo: in intersection zetten?
-		float freq;
+		public Vector3 EntryPoint    { get; set; }
+		public Vector3 DirectionVect { get; set; }
 
-		public Ray(Vector3 entryPoint, Vector3 direction)
-		{
+		//private float t;  //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
+							//todo: in intersection zetten?
+		//float freq;
+
+		public Ray(Vector3 entryPoint, Vector3 direction) {
 			this.EntryPoint = entryPoint;
 			this.DirectionVect = direction.Normalized();
 		}
 
-		public void Set(Vector3 entryPoint, Vector3 direction) {
+		public void Set(Vector3 entryPoint, Vector3 direction) { //todo: stelt niet alles in
 			EntryPoint    = entryPoint;
 			DirectionVect = direction;
 		}
 	}
-
 	#endregion Rays
 	#region Lights
 	public class LightSource

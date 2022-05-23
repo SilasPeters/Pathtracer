@@ -105,22 +105,19 @@ namespace EpicRaytracer
 
 		public override void RenderImage(Scene scene)
 		{
-			ViewRay viewRay = new ViewRay(Pos, Vector3.Zero);
+			Ray viewRay = new Ray(Pos, Vector3.Zero);
 			
 			for (int y = DisplayRegion.Top; y < DisplayRegion.Bottom; y++)
 				for (int x = DisplayRegion.Left; x < DisplayRegion.Right; x++)
 				{
 					viewRay.DirectionVect =
 						Lens.HalfRight * -(HalfW - (x - DisplayRegion.Left)) / HalfW +
-						Lens.HalfUp    *  (HalfH - (y - DisplayRegion.Top )) / HalfH +
+						Lens.HalfUp * (HalfH - (y - DisplayRegion.Top)) / HalfH +
 						Vector3.UnitZ;
 
 					if (scene.TryIntersect(viewRay, out IntersectionInfo ii))
 					{
-						if (scene.isLit(ii, out IntersectionInfo iii))
-						{
-							display.pixels[x + y * display.width] = 0x00ff00;
-						}
+						MyApplication.Display.pixels[x + y * MyApplication.Display.width] = 0xffffff;
 					}
 				}
 		}
