@@ -117,11 +117,11 @@ namespace EpicRaytracer
 
 					if (scene.TryIntersect(viewRay, out IntersectionInfo ii))
 					{
-						//Console.WriteLine(ii.ToString());
-						MyApplication.Display.pixels[x + y * MyApplication.Display.width] = 0x00ff00;
+						if (scene.isLit(ii, out IntersectionInfo iii))
+						{
+							display.pixels[x + y * display.width] = 0x00ff00;
+						}
 					}
-					else
-						MyApplication.Display.pixels[x + y * MyApplication.Display.width] = 0xff00ff;
 				}
 		}
 	}

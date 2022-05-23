@@ -1,53 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace EpicRaytracer
+namespace Raytracer
 {
 	#region Rays
 	public abstract class Ray
 	{
-		public Vector3 EntryPoint    { get; protected set; }
-		public Vector3 DirectionVect { get; set; }
+		public Vector3 EntryPoint { get; protected set; }
+		public Vector3 DirectionVect { get; protected set; }
+		public float t { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
+								//todo: in intersection zetten?
+		float freq;
 
 		public Ray(Vector3 entryPoint, Vector3 direction)
 		{
 			this.EntryPoint = entryPoint;
 			this.DirectionVect = direction.Normalized();
 		}
-	}
 
-	public class LightRay : Ray
-	{
-		float freq;
-
-		public LightRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
-		}
-	}
-	public class ViewRay : Ray
-	{
-		public ViewRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
-		}
-
-		public void Set(Vector3 entryPoint, Vector3 direction)
-		{
+		public void Set(Vector3 entryPoint, Vector3 direction) {
 			EntryPoint    = entryPoint;
 			DirectionVect = direction;
-		}
-	}
-	public class ShadowRay : Ray
-	{
-		public ShadowRay(Vector3 entryPoint, Vector3 direction) : base(entryPoint, direction)
-		{
-
 		}
 	}
 
@@ -144,7 +123,7 @@ namespace EpicRaytracer
 		} 
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			float d = -Vector3.Dot(Normal, Pos);
+			/*float d = -Vector3.Dot(Normal, Pos);
 			float bot = Vector3.Dot(Normal, ray.DirectionVect);
 
 			if (bot != 0)
@@ -159,7 +138,7 @@ namespace EpicRaytracer
 			{
 				ii = IntersectionInfo.None;
 				return false;
-			}
+			}*/
 
 			// assuming vectors are all normalized
 			float denom = Vector3.Dot(Normal, ray.DirectionVect);
@@ -213,6 +192,7 @@ namespace EpicRaytracer
 	{
 		public Vector3 IntPoint;
 		public Vector3 Normal;
+		public Object Object;
 
 		public const IntersectionInfo None = null;
 
@@ -222,7 +202,7 @@ namespace EpicRaytracer
 			this.Normal = Normal;
 		}
 
-		public override string ToString() => $"IntPoint: {IntPoint.ToString()}, Normal: {Normal.ToString()}";
+		public override string ToString() => $"IntPoint: {IntPoint}, Normal: {Normal}";
 	}
 	#endregion Intersection
 }
