@@ -67,14 +67,14 @@ namespace EpicRaytracer
 	public struct Lens
 	{
 		//todo: lens (een object maken zodat hij) een afstand kan hebben tot de camera etc.
-		public Vector3 HalfRight { get; }
-		public Vector3 HalfUp { get; }
+		public float HalfRight { get; }
+		public float HalfUp { get; }
 		
 		/// <summary>Creates a lens (formerly known as screen) which has a height of 1 and a width of 1 * 'AspectRatio' (both multiplied by 'scale')</summary>
 		public Lens(float AspectRatio, float scale = 1f)
 		{
-			HalfRight = Vector3.UnitX * scale * AspectRatio;
-			HalfUp    = Vector3.UnitY * scale;
+			HalfRight = scale * AspectRatio;
+			HalfUp    = scale;
 		}
 	}
 
@@ -92,11 +92,11 @@ namespace EpicRaytracer
 		
 		public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion) { //todo: ask for a scale for the lens
 			Pos           = pos;
-			Front         = front;
-			Up            = up;
+			Front         = front.Normalized();
+			Up            = up.Normalized();
 			DisplayRegion = displayRegion;
 
-			Right = -Vector3.Cross(front, up);
+			Right = Vector3.Cross(Up, Front).Normalized();
 			Lens  = new Lens((float)DisplayRegion.Width / DisplayRegion.Height);
 			HalfW = DisplayRegion.Width  >> 1;
 			HalfH = DisplayRegion.Height >> 1;

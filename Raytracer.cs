@@ -18,7 +18,7 @@ namespace Template
 		{
 			Scene.AddObject(new Sphere(new Vector3(-4,     0,  0), 1f, Vector3.One));
 			Scene.AddObject(new Sphere(new Vector3(0,      0,  0), 1f, Vector3.One));
-			Scene.AddObject(new Sphere(new Vector3(4,      3,  0), 1f, Vector3.One));
+			Scene.AddObject(new Sphere(new Vector3(4,      1,  0), 1f, Vector3.One));
 			Scene.AddLight(new LightSource(new Vector3(3f, 5f, 3f), Vector3.One, 1));
 			//Scene.AddLight(new LightSource(new Vector3(-3f, 2f, -3f), 1, 1));
 			//scene.AddObject(new Plane(Vector3.UnitY, new Vector3(0, 5f, 0)));
@@ -30,7 +30,7 @@ namespace Template
 					//new DebugCamera(new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
 				},
 				new BasicCamera[] { // normal state 2
-					new MainCamera (new Vector3(0, 0, 5), -Vector3.UnitZ, Vector3.UnitY, new Rectangle(0, 0, 800, 400)),
+					new MainCamera (new Vector3(3, 0, -3), new Vector3(-0.5f, 0f, 0.5f), Vector3.UnitY, new Rectangle(0, 0, 800, 400)),
 					//new DebugCamera(new Vector3(0, 0, -10), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
 				},
 				//new BasicCamera[] { // debug state

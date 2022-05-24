@@ -90,15 +90,15 @@ namespace EpicRaytracer
 				if (dis == 0)
 					t = -b / (2 * a);
 				else //dis > 0
-				{
-					var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
-						? Math.Abs(-Math.Sqrt(dis))
-						: Math.Abs( Math.Sqrt(dis));
-					t = (float)(-b + magicNumber) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
+				//{
+					//var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
+						//? Math.Abs(-Math.Sqrt(dis))
+						//Math.Sqrt(dis);
+					t = (float)(-b + Math.Sqrt(dis)) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
 					// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
-				}
+				//}
 				
-				ii = new IntersectionInfo(ray, t, this);
+				ii = new IntersectionInfo(ref ray, t, this);
 				return true;
 			}
 			//else
@@ -144,7 +144,7 @@ namespace EpicRaytracer
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
 				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ray, t, this); //todo: krom
+				ii = new IntersectionInfo(ref ray, t, this);
 				return t >= 0;
 			}
 
@@ -208,7 +208,7 @@ namespace EpicRaytracer
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(Ray intersectedRay, float t, Object obj)
+		public IntersectionInfo(ref Ray intersectedRay, float t, Object obj)
 		{
 			this.IntersectedRay = intersectedRay;
 			this.t              = t;
