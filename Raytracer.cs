@@ -43,7 +43,7 @@ namespace EpicRaytracer
 
 		private static Vector3 getLighting(Vector3 point)
 		{
-			Vector3 lightColor = Vector3.Zero;
+			Vector3 lightColor = new Vector3(0.5f, 0.5f, 0.5f);
 
 			Ray shadowray = new Ray(point, Vector3.Zero);
 			foreach (var lightSource in lightSources)

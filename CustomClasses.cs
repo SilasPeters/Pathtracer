@@ -176,7 +176,12 @@ namespace EpicRaytracer
 	public static class Colors
 	{
 		public static int    Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
-		public static int    Make(Vector3 vec) => Make((byte)(vec.X * 255), (byte)(vec.Y * 255), (byte)(vec.Z * 255));
+		public static int Make(Vector3 vec) {
+			return Make(
+				(byte)(Math.Min(vec.X, 1) * 255),
+				(byte)(Math.Min(vec.Y, 1) * 255),
+				(byte)(Math.Min(vec.Z, 1) * 255));
+		}
 		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
 	}
 	
