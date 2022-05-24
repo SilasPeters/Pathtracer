@@ -17,7 +17,7 @@ namespace Template
 		public static void Init()
 		{
 			Scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2f, Vector3.One));
-			Scene.AddLight(new LightSource(new Vector3(0, 5, 0), 1, 1));
+			Scene.AddLight(new LightSource(new Vector3(3f, 3f, 3f), 1, 1));
 			//scene.AddObject(new Plane(Vector3.UnitY, new Vector3(0, 5f, 0)));
 
 			_cameraStances = new []
