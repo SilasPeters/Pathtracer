@@ -33,10 +33,10 @@ namespace Template
 			GL.Disable( EnableCap.DepthTest );
 			GL.Hint( HintTarget.PerspectiveCorrectionHint, HintMode.Nicest );
 			ClientSize            = new Size( 800, 400 );
-			MyApplication.Display = new Display( Width, Height );
-			Sprite.target         = MyApplication.Display;
-			screenID              = MyApplication.Display.GenTexture();
-			MyApplication.Init();
+			Raytracer.Display = new Display( Width, Height );
+			Sprite.target         = Raytracer.Display;
+			screenID              = Raytracer.Display.GenTexture();
+			Raytracer.Init();
 		}
 		protected override void OnUnload( EventArgs e )
 		{
@@ -61,7 +61,7 @@ namespace Template
 		protected override void OnRenderFrame( FrameEventArgs e )
 		{
 			// called once per frame; render
-			MyApplication.Tick();
+			Raytracer.Tick();
 			if( terminated )
 			{
 				Exit();
@@ -70,9 +70,9 @@ namespace Template
 			// convert MyApplication.screen to OpenGL texture
 			GL.BindTexture( TextureTarget.Texture2D, screenID );
 			GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
-						   MyApplication.Display.width, MyApplication.Display.height, 0,
+						   Raytracer.Display.width, Raytracer.Display.height, 0,
 						   OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
-						   PixelType.UnsignedByte, MyApplication.Display.pixels
+						   PixelType.UnsignedByte, Raytracer.Display.pixels
 						 );
 			// draw screen filling quad
 			GL.Begin( PrimitiveType.Quads );
