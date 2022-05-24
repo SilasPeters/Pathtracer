@@ -22,7 +22,7 @@ namespace EpicRaytracer
 		{
 			if (TryIntersect(ray, out IntersectionInfo ii)) //intersection
 			{
-				return ii.Object.ReflectionConstant * getLighting(ii.Point);
+				return ii.Object.Color * getLighting(ii.Point);
 			}
 			else //no intersection
 			{
@@ -37,16 +37,16 @@ namespace EpicRaytracer
 			Ray shadowray = new Ray(point, Vector3.Zero);
 			foreach (var lightSource in lightSources)
 			{
+				float d = (lightSource.Pos - point).LengthFast;
 				shadowray.SetDir(lightSource.Pos - point);
 				if (TryIntersect(shadowray, out IntersectionInfo ii)) //intersection
 				{
-					float d = (lightSource.Pos - point).LengthFast;
-					if (!(ii.T > Raytracer.Epsilon && ii.T < d - Raytracer.Epsilon)) //incorrect intersection
-						lightColor += Vector3.One;
+					if (!(ii.t > Raytracer.Epsilon && ii.t < d - Raytracer.Epsilon)) //incorrect intersection
+						lightColor += lightSource.CalculateColor(ii.t);
 				}
 				else
 				{
-					lightColor += Vector3.One;
+					lightColor += lightSource.CalculateColor(d);
 				}
 			}
 

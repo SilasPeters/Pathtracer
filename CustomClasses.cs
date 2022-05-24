@@ -14,18 +14,11 @@ namespace EpicRaytracer
 		public Vector3 EntryPoint    { get; set; }
 		public Vector3 DirectionVect { get; set; }
 
-		//private float t;  //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
-							//todo: in intersection zetten?
 		//float freq;
 
 		public Ray(Vector3 entryPoint, Vector3 direction) {
-			this.EntryPoint = entryPoint;
+			this.EntryPoint    = entryPoint;
 			this.DirectionVect = direction.Normalized();
-		}
-
-		public void Set(Vector3 entryPoint, Vector3 direction) { //todo: stelt niet alles in
-			EntryPoint    = entryPoint;
-			DirectionVect = direction;
 		}
 
 		public void SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
@@ -34,35 +27,48 @@ namespace EpicRaytracer
 	public class LightSource
 	{
 		public Vector3 Pos       { get; }
-		public float   Intensity { get; }
+		public float   Radius    { get; }
 		public float   Freq      { get; }
+		
+		private readonly Vector3 Color;
 
-		public LightSource(Vector3 pos, float intensity, float freq) {
-			this.Pos       = pos;
-			this.Intensity = intensity;
-			this.Freq      = freq;
+		/// <param name="radius">Only used for the debugcam</param>
+		public LightSource(Vector3 pos, Vector3 color, float freq, float radius = 1) {	
+			this.Pos    = pos;
+			this.Color  = color;
+			this.Freq   = freq;
+			this.Radius = radius;
+		}
+
+		/// <summary>Returns the color that is dimmed based on distance 't'</summary>
+		public Vector3 CalculateColor(float t)
+		{
+			//todo: moet worden bijgewerkt zodat afstand een factor is op intensity, maar dit gaat gepaard met andere
+			//changes dus ik laat dit voor nu
+
+			return Color;
 		}
 	}
 	
 	#region Objects
 	public abstract class Object
 	{
-		public Vector3 Pos                { get; }
-		public Vector3 ReflectionConstant { get; }
+		public Vector3 Pos   { get; protected set; }
+		public Vector3 Color { get; protected set; }
 
-		/// <param name="reflectionConstant">Determines how much of each RGB component is reflected and thus rendered. Each component must be 0..1</param>
-		protected Object(Vector3 pos, Vector3 reflectionConstant) {
-			Pos                = pos;
-			ReflectionConstant = reflectionConstant;
+		protected Object(Vector3 pos, Vector3 color) {
+			Pos   = pos;
+			Color = color;
 		}
 
-		public abstract bool TryIntersect(Ray ray, out IntersectionInfo ii);
-		//todo: normal vector is always to the outside (REFRACTION)
+		public abstract bool    TryIntersect(Ray ray, out IntersectionInfo ii);
+		public abstract Vector3 GetNormalAt(Vector3 pointOnObject);
+		//todo: normal vector is always to the outside [REFRACTION] - wat bedoelden we hier mee? Wanneer was dit van toepassing?
 	}
 	public class Sphere : Object
 	{
-		public float Radius { get; }
-		public Sphere(Vector3 pos, float radius, Vector3 reflectionConstant) : base(pos, reflectionConstant) {
+		public float Radius { get; protected set; }
+		public Sphere(Vector3 pos, float radius, Vector3 color) : base(pos, color) {
 			Radius = radius;
 		}
 		
@@ -82,7 +88,7 @@ namespace EpicRaytracer
 				float t = -b / (2 * a);
 
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				Vector3 normal = (intPoint - Pos).Normalized();
+				Vector3 normal   = GetNormalAt(intPoint);
 
 				ii = new IntersectionInfo(intPoint, normal, t, this);
 				return true;
@@ -93,7 +99,7 @@ namespace EpicRaytracer
 				float t = (float)(-b + magicNumber) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
 																// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				Vector3 normal = (intPoint - Pos).Normalized();
+				Vector3 normal   = GetNormalAt(intPoint);
 
 				ii = new IntersectionInfo(intPoint, normal, t, this);
 				return true;
@@ -101,17 +107,18 @@ namespace EpicRaytracer
 			ii = IntersectionInfo.None;
 			return false;
 		}
+
+		public override Vector3 GetNormalAt(Vector3 pointOnObject) => (pointOnObject - Pos) / Radius; //accurate enough
+
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
 	
 	public class Plane : Object
 	{
-		protected Vector3 Pos;
-		protected Vector3 Normal;
+		public Vector3 Normal { get; protected set; }
 
-		public Plane(Vector3 pos, Vector3 normal, Vector3 reflectionConstant) : base(pos, reflectionConstant) {
-			Normal = normal;
-			Pos    = pos;
+		public Plane(Vector3 pos, Vector3 normal, Vector3 color) : base(pos, color) {
+			Normal = normal.Normalized();
 		}
 
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
@@ -145,14 +152,15 @@ namespace EpicRaytracer
 
 			ii = IntersectionInfo.None;
 			return false;
-			
 		}
+
+		public override Vector3 GetNormalAt(Vector3 pointOnObject) => Normal;
 	}
-	public class FinPlane : Plane
+	public class Quad : Plane
 	{
-		Vector3 Min;
-		Vector3 Max;
-		public FinPlane(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Vector3 reflectionConstant) : base(pos, normal, reflectionConstant) {
+		public Vector3 Min { get; protected set;} //todo: Shouldn't we ask for vertexes? Otherwise a quad is always square
+		public Vector3 Max { get; protected set;}
+		public Quad(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Vector3 color) : base(pos, normal, color) {
 			this.Min = min;
 			this.Max = max;
 		}
@@ -175,33 +183,41 @@ namespace EpicRaytracer
 	
 	public static class Colors
 	{
-		public static int    Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
+		public static int Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
 		public static int Make(Vector3 vec) {
-			return Make(
-				(byte)(Math.Min(vec.X, 1) * 255),
-				(byte)(Math.Min(vec.Y, 1) * 255),
-				(byte)(Math.Min(vec.Z, 1) * 255));
+			return Make((byte)(Math.Min(vec.X, 1) * 255), //todo: assume (safely...) that the values won't clip beyond 1
+						(byte)(Math.Min(vec.Y, 1) * 255),
+						(byte)(Math.Min(vec.Z, 1) * 255));
 		}
-		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
+
+		public static Vector3 GetVector(int c) => new Vector3(GetR(c), GetB(c), GetB(c));
+		public static byte[]  SplitRGB(int c)  => new byte[] { GetR(c), GetG(c), GetB(c) };
+		public static byte    GetR(int color)  => (byte)(color >> 16);
+		public static byte    GetG(int color)  => (byte)(color >> 8 );
+		public static byte    GetB(int color)  => (byte)(color      );
 	}
-	
-	public class IntersectionInfo
+
+	public class IntersectionInfo //todo: make this a struct. This might prevents issues when passing this as an
+								  //argument in recursion when afterwards using this in the same context. (As a reference
+								  //type, values might change in deeper recursion levels affecting all levels as a result.)
+								  //Yet, all items are readonly anyway so this is pratically a struct.
 	{
 		public Vector3 Point  { get; }
 		public Vector3 Normal { get; }
-		public float   T      { get; }
+		public float   t      { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
 		public Object  Object { get; }
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(Vector3 point, Vector3 Normal, float t, Object obj)
+		public IntersectionInfo(Vector3 point, Vector3 normal, float t, Object obj)
 		{
 			this.Point  = point;
-			this.Normal = Normal;
-			this.T      = t;
+			this.Normal = normal;
+			this.t      = t;
 			this.Object = obj;
 		}
 
+		
 		public override string ToString() => $"IntPoint: {Point}, Normal: {Normal}";
 	}
 }
