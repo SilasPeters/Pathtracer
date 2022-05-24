@@ -80,30 +80,28 @@ namespace EpicRaytracer
 
 			float a = d.X*d.X + d.Y*d.Y + d.Z*d.Z;
 			float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
-			float c = e.X*(e.X -2*p.X) + p.X *p.X + e.Y  * (e.Y  - 2 * p.Y) + p.Y * p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z * p.Z -Radius*Radius;//p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
-			float dis = b * b - (4 * a * c);
-			
-			if (dis == 0)
+			float c = e.X * (e.X - 2 * p.X) + p.X*p.X + e.Y * (e.Y - 2 * p.Y) + p.Y*p.Y + e.Z * (e.Z - 2 * p.Z) +
+				p.Z*p.Z - Radius*Radius; //p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
+			float dis = b*b - (4 * a * c);
+
+			if (dis >= 0)
 			{
-				float t = -b / (2 * a);
-
-				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				Vector3 normal   = GetNormalAt(intPoint);
-
-				ii = new IntersectionInfo(intPoint, normal, t, this);
+				float t;
+				if (dis == 0)
+					t = -b / (2 * a);
+				else //dis > 0
+				{
+					var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
+						? Math.Abs(-Math.Sqrt(dis))
+						: Math.Abs( Math.Sqrt(dis));
+					t = (float)(-b + magicNumber) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
+					// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
+				}
+				
+				ii = new IntersectionInfo(ray, t, this);
 				return true;
 			}
-			else if (dis > 0)
-			{
-				double magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis)) ? Math.Abs(-Math.Sqrt(dis)) : Math.Abs(Math.Sqrt(dis));
-				float t = (float)(-b + magicNumber) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
-																// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
-				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				Vector3 normal   = GetNormalAt(intPoint);
-
-				ii = new IntersectionInfo(intPoint, normal, t, this);
-				return true;
-			}
+			//else
 			ii = IntersectionInfo.None;
 			return false;
 		}
@@ -146,7 +144,7 @@ namespace EpicRaytracer
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
 				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal, t, this); //todo: krom
+				ii = new IntersectionInfo(ray, t, this); //todo: krom
 				return t >= 0;
 			}
 
@@ -202,6 +200,7 @@ namespace EpicRaytracer
 								  //type, values might change in deeper recursion levels affecting all levels as a result.)
 								  //Yet, all items are readonly anyway so this is pratically a struct.
 	{
+		public Ray IntersectedRay { get; }
 		public Vector3 Point  { get; }
 		public Vector3 Normal { get; }
 		public float   t      { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
@@ -209,12 +208,14 @@ namespace EpicRaytracer
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(Vector3 point, Vector3 normal, float t, Object obj)
+		public IntersectionInfo(Ray intersectedRay, float t, Object obj)
 		{
-			this.Point  = point;
-			this.Normal = normal;
-			this.t      = t;
-			this.Object = obj;
+			this.IntersectedRay = intersectedRay;
+			this.t              = t;
+			this.Object         = obj;
+			
+			this.Point          = intersectedRay.EntryPoint + intersectedRay.DirectionVect * t;
+			this.Normal         = obj.GetNormalAt(Point);
 		}
 
 		
