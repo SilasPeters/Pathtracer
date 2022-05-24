@@ -9,15 +9,15 @@ namespace Template
 	static class MyApplication
 	{
 		public static Display Display;
+		public static float Epsilon = 0.001f;
 
 		private static BasicCamera[][] _cameraStances;
 		private static int _currentCamStance = 0;
 
 		public static void Init()
 		{
-			Scene scene = new Scene();
-			scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2f, Vector3.One));
-			scene.AddLight(new LightSource(new Vector3(0, 5, 0), 1, 1));
+			Scene.AddObject(new Sphere(new Vector3(0, 0, 0), 2f, Vector3.One));
+			Scene.AddLight(new LightSource(new Vector3(0, 5, 0), 1, 1));
 			//scene.AddObject(new Plane(Vector3.UnitY, new Vector3(0, 5f, 0)));
 
 			_cameraStances = new []
@@ -31,7 +31,6 @@ namespace Template
 					new DebugCamera(new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(0, 0, 400, 400))
 				}
 			};
-			Raytracer.Set(scene); //todo: display static and thus not to be given as parameter?
 		}
 		
 		public static void Tick()

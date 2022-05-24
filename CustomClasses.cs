@@ -27,6 +27,8 @@ namespace EpicRaytracer
 			EntryPoint    = entryPoint;
 			DirectionVect = direction;
 		}
+
+		public void SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
 	}
 	
 	public class LightSource
@@ -82,20 +84,21 @@ namespace EpicRaytracer
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				Vector3 normal = (intPoint - Pos).Normalized();
 
-				ii = new IntersectionInfo(intPoint, normal);
+				ii = new IntersectionInfo(intPoint, normal, t, this);
 				return true;
 			}
 			else if (dis > 0)
 			{
-				float t = (float)(-b - Math.Sqrt(dis)) / (2 * a); // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
-																  // wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
+				double magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis)) ? Math.Abs(-Math.Sqrt(dis)) : Math.Abs(Math.Sqrt(dis));
+				float t = (float)(-b + magicNumber) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
+																// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				Vector3 normal = (intPoint - Pos).Normalized();
 
-				ii = new IntersectionInfo(intPoint, normal);
+				ii = new IntersectionInfo(intPoint, normal, t, this);
 				return true;
 			}
-			ii = IntersectionInfo.None; 
+			ii = IntersectionInfo.None;
 			return false;
 		}
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
@@ -136,8 +139,8 @@ namespace EpicRaytracer
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
 				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal); //todo: krom
-				return (t >= 0);
+				ii = new IntersectionInfo(ray.EntryPoint + ray.DirectionVect * t, Normal, t, this); //todo: krom
+				return t >= 0;
 			}
 
 			ii = IntersectionInfo.None;
@@ -158,7 +161,7 @@ namespace EpicRaytracer
 		{
 			if(base.TryIntersect(ray, out ii))
 			{
-				if((ii.IntPoint - Pos).LengthSquared <= 1 * 1)
+				if((ii.Point - Pos).LengthSquared <= 1 * 1)
 				{
 					//Console.WriteLine(t);
 					return true;
@@ -173,24 +176,27 @@ namespace EpicRaytracer
 	public static class Colors
 	{
 		public static int    Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
-		//public static int    Make(Vector3 vec) => Make(vec.X, vec.Y, vec.Z);
+		public static int    Make(Vector3 vec) => Make((byte)(vec.X * 255), (byte)(vec.Y * 255), (byte)(vec.Z * 255));
 		public static byte[] SplitRGB(int color) => new byte[] { (byte)(color >> 16), (byte)(color >> 8), (byte)color };
 	}
 	
 	public class IntersectionInfo
 	{
-		public Vector3 IntPoint;
-		public Vector3 Normal;
-		//public Object Object;
+		public Vector3 Point  { get; }
+		public Vector3 Normal { get; }
+		public float   T      { get; }
+		public Object  Object { get; }
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(Vector3 IntPoint, Vector3 Normal)
+		public IntersectionInfo(Vector3 point, Vector3 Normal, float t, Object obj)
 		{
-			this.IntPoint = IntPoint;
-			this.Normal   = Normal;
+			this.Point  = point;
+			this.Normal = Normal;
+			this.T      = t;
+			this.Object = obj;
 		}
 
-		public override string ToString() => $"IntPoint: {IntPoint}, Normal: {Normal}";
+		public override string ToString() => $"IntPoint: {Point}, Normal: {Normal}";
 	}
 }

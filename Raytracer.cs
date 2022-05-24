@@ -12,30 +12,59 @@ namespace EpicRaytracer
 {
 	public static class Raytracer
 	{
-		private static Scene _scene;
-		
-		public static void Set(Scene scene) {
-			_scene       = scene;
-		}
-
 		public static void RenderImage(BasicCamera[] cams)
 		{
 			foreach (var cam in cams)
 			{
-				cam.RenderImage(_scene);
+				cam.RenderImage();
 			}
 		}
 	}
 
-	public class Scene
+	public static class Scene
 	{
-		private IList<Object> renderedObjects = new List<Object>();
-		private IList<LightSource> lightSources = new List<LightSource>();
+		private static IList<Object> renderedObjects = new List<Object>();
+		private static IList<LightSource> lightSources = new List<LightSource>();
 
-		public void AddObject(Object o) => renderedObjects.Add(o);
-		public void AddLight(LightSource o) => lightSources.Add(o);
+		public static void AddObject(Object o) => renderedObjects.Add(o);
+		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
+		public static Vector3 GetColor(Ray ray)
+		{
+			if (TryIntersect(ray, out IntersectionInfo ii)) //intersection
+			{
+				return ii.Object.ReflectionConstant * getLighting(ii.Point);
+			}
+			else //no intersection
+			{
+				return Vector3.Zero;
+			}
+		}
+
+		private static Vector3 getLighting(Vector3 point)
+		{
+			Vector3 lightColor = Vector3.Zero;
+
+			Ray shadowray = new Ray(point, Vector3.Zero);
+			foreach (var lightSource in lightSources)
+			{
+				shadowray.SetDir(lightSource.Pos - point);
+				if (TryIntersect(shadowray, out IntersectionInfo ii)) //intersection
+				{
+					float d = (lightSource.Pos - point).LengthFast;
+					if (!(ii.T > MyApplication.Epsilon && ii.T < d - MyApplication.Epsilon)) //incorrect intersection
+						lightColor += Vector3.One;
+				}
+				else
+				{
+					lightColor += Vector3.One;
+				}
+			}
+
+			return lightColor;
+		}
+
+		public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
 		{
 			foreach (Object obj in renderedObjects)
 				if (obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii))
@@ -89,7 +118,7 @@ namespace EpicRaytracer
 			DisplayRegion = DisplayRegion;
 			Lens          = new Lens((float)DisplayRegion.Width / DisplayRegion.Height);
 		}
-		public abstract void RenderImage(Scene scene);
+		public abstract void RenderImage();
 
 		public void Translate(Vector3 movement)          => Pos += movement;
 		public void Translate(float x, float y, float z) => Pos += new Vector3(x, y, z);
@@ -103,21 +132,23 @@ namespace EpicRaytracer
 		{
 		}
 
-		public override void RenderImage(Scene scene)
+		public override void RenderImage()
 		{
 			Ray viewRay = new Ray(Pos, Vector3.Zero);
 			
 			for (int y = DisplayRegion.Top; y < DisplayRegion.Bottom; y++)
 				for (int x = DisplayRegion.Left; x < DisplayRegion.Right; x++)
 				{
-					viewRay.DirectionVect =
+					viewRay.SetDir(
 						Lens.HalfRight * -(HalfW - (x - DisplayRegion.Left)) / HalfW +
 						Lens.HalfUp * (HalfH - (y - DisplayRegion.Top)) / HalfH +
-						Vector3.UnitZ;
+						Vector3.UnitZ);
 
-					if (scene.TryIntersect(viewRay, out IntersectionInfo ii))
+					if (Scene.TryIntersect(viewRay, out IntersectionInfo ii))
 					{
-						MyApplication.Display.pixels[x + y * MyApplication.Display.width] = 0xffffff;
+						Vector3 c     = Scene.GetColor(viewRay);
+						int     color = Colors.Make(c);
+						MyApplication.Display.pixels[x + y * MyApplication.Display.width] = color;
 					}
 				}
 		}
@@ -130,7 +161,7 @@ namespace EpicRaytracer
 		{
 		}
 
-		public override void RenderImage(Scene scene)
+		public override void RenderImage()
 		{
 			return;
 			throw new NotImplementedException();
