@@ -74,15 +74,17 @@ namespace EpicRaytracer
 		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			Vector3 e = ray.EntryPoint;
-			Vector3 d = ray.DirectionVect;
-			Vector3 p = Pos;
+			//Vector3 e = ray.EntryPoint;
+			//Vector3 d = ray.DirectionVect;
+			//Vector3 p = Pos;
 
-			float a = d.X*d.X + d.Y*d.Y + d.Z*d.Z;
-			float b = 2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
-			float c = e.X * (e.X - 2 * p.X) + p.X*p.X + e.Y * (e.Y - 2 * p.Y) + p.Y*p.Y + e.Z * (e.Z - 2 * p.Z) +
-				p.Z*p.Z - Radius*Radius; //p.X * (p.X - 2 * e.X) + p.Y * (p.Y - 2 * e.Y) + p.Z * (p.Z - 2 * e.Z) - Radius * Radius;
-			float dis = b*b - (4 * a * c);
+			float a = Vector3.Dot(ray.DirectionVect, ray.DirectionVect); //== length^2
+					//d.X*d.X + d.Y*d.Y + d.Z*d.Z;
+			float b = 2 * Vector3.Dot(ray.DirectionVect, ray.EntryPoint - Pos);
+					//2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
+			float c = Vector3.Dot(ray.EntryPoint, ray.EntryPoint - 2 * Pos) + Vector3.Dot(Pos, Pos) - Radius*Radius;
+					//e.X * (e.X - 2 * p.X) + p.X*p.X + e.Y * (e.Y - 2 * p.Y) + p.Y*p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z*p.Z - Radius*Radius;
+			float dis = b*b - 4 * a * c;
 
 			if (dis >= 0)
 			{
@@ -98,7 +100,7 @@ namespace EpicRaytracer
 					// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
 				//}
 				
-				ii = new IntersectionInfo(ref ray, t, this);
+				ii = new IntersectionInfo(ray, t, this);
 				return true;
 			}
 			//else
@@ -144,7 +146,7 @@ namespace EpicRaytracer
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
 				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ref ray, t, this);
+				ii = new IntersectionInfo(ray, t, this);
 				return t >= 0;
 			}
 
@@ -208,7 +210,7 @@ namespace EpicRaytracer
 
 		public const IntersectionInfo None = null;
 
-		public IntersectionInfo(ref Ray intersectedRay, float t, Object obj)
+		public IntersectionInfo(Ray intersectedRay, float t, Object obj)
 		{
 			this.IntersectedRay = intersectedRay;
 			this.t              = t;
