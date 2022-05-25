@@ -63,19 +63,20 @@ namespace EpicRaytracer
 			return false;
 		}
 	}
-
+	
 	public struct Lens
 	{
-		//todo: lens (een object maken zodat hij) een afstand kan hebben tot de camera etc.
-		public float HalfRight { get; }
-		public float HalfUp { get; }
+		private readonly Vector3 horizontal, vertical;
+		private readonly Vector3 topLeft;
 		
-		/// <summary>Creates a lens (formerly known as screen) which has a height of 1 and a width of 1 * 'AspectRatio' (both multiplied by 'scale')</summary>
-		public Lens(float AspectRatio, float scale = 1f)
-		{
-			HalfRight = scale * AspectRatio;
-			HalfUp    = scale;
+		public Lens(BasicCamera cam, float distance, float height = 1f) {
+			var aspectRatio = (float)cam.DisplayRegion.Width / cam.DisplayRegion.Height;
+			horizontal = cam.Right * height * aspectRatio;
+			vertical   = cam.Up * height;
+			topLeft    = cam.Front * distance - horizontal / 2 + vertical / 2;
 		}
+
+		public Vector3 GetDirToPixel(float xPercentage, float yPercentage) => topLeft + horizontal * xPercentage - vertical * yPercentage;
 	}
 
 	public abstract class BasicCamera
@@ -87,26 +88,16 @@ namespace EpicRaytracer
 		public Rectangle DisplayRegion { get; protected set; }
 		public Lens      Lens          { get; protected set; }
 
-		protected readonly float HalfW;
-		protected readonly float HalfH;
-		
-		public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion) { //todo: ask for a scale for the lens
+		public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lensDistance) {
 			Pos           = pos;
 			Front         = front.Normalized();
 			Up            = up.Normalized();
 			DisplayRegion = displayRegion;
 
 			Right = Vector3.Cross(Up, Front).Normalized();
-			Lens  = new Lens((float)DisplayRegion.Width / DisplayRegion.Height);
-			HalfW = DisplayRegion.Width  >> 1;
-			HalfH = DisplayRegion.Height >> 1;
+			Lens  = new Lens(this, lensDistance);
 		}
-
-		/// <summary>Updates everything so that the camera now renders its content to other pixels</summary>
-		public void SetDisplayRegion(Rectangle displayRegion) {
-			DisplayRegion = DisplayRegion;
-			Lens          = new Lens((float)DisplayRegion.Width / DisplayRegion.Height);
-		}
+		
 		public abstract void RenderImage();
 
 		public void Translate(Vector3 movement)          => Pos += movement;
@@ -116,8 +107,8 @@ namespace EpicRaytracer
 	}
 	public class MainCamera : BasicCamera
 	{
-		public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion)
-			: base(pos, front, up, displayRegion)
+		public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lensDistance)
+			: base(pos, front, up, displayRegion, lensDistance)
 		{
 		}
 
@@ -125,17 +116,15 @@ namespace EpicRaytracer
 		{
 			Ray viewRay = new Ray(Pos, Vector3.Zero);
 			
-			for (int y = DisplayRegion.Top; y < DisplayRegion.Bottom; y++)
-				for (int x = DisplayRegion.Left; x < DisplayRegion.Right; x++)
+			for (int y = 0; y < DisplayRegion.Height; y++)
+				for (int x = 0; x < DisplayRegion.Width; x++)
 				{
-					viewRay.SetDir(
-						Right * Lens.HalfRight * -(HalfW - (x - DisplayRegion.Left)) / HalfW +
-						Up * Lens.HalfUp * (HalfH - (y - DisplayRegion.Top)) / HalfH +
-						Front);
-
+					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
+													  (float)y / (DisplayRegion.Height - 1)));
 					if (Scene.TryIntersect(viewRay, out IntersectionInfo ii))
 					{
-						Raytracer.Display.pixels[x + y * Raytracer.Display.width] = Colors.Make(Scene.GetColor(viewRay));
+						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
+							= Colors.Make(Scene.GetColor(viewRay));
 					}
 				}
 		}
@@ -143,13 +132,15 @@ namespace EpicRaytracer
 
 	public class DebugCamera : BasicCamera
 	{
-		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion)
-			: base(pos, front, up, displayRegion)
+		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lenseDistance)
+			: base(pos, front, up, displayRegion, lenseDistance)
 		{
 		}
 
 		public override void RenderImage()
 		{
+			Vector3 filter = Vector3.One - Front; //doe Math.Abs(Front)
+			
 			return;
 			throw new NotImplementedException();
 		}

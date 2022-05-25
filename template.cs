@@ -32,10 +32,10 @@ namespace Template
 			GL.Enable( EnableCap.Texture2D );
 			GL.Disable( EnableCap.DepthTest );
 			GL.Hint( HintTarget.PerspectiveCorrectionHint, HintMode.Nicest );
-			ClientSize            = new Size( 800, 400 );
+			ClientSize        = Raytracer.DisplaySize;
 			Raytracer.Display = new Display( Width, Height );
-			Sprite.target         = Raytracer.Display;
-			screenID              = Raytracer.Display.GenTexture();
+			Sprite.target     = Raytracer.Display;
+			screenID          = Raytracer.Display.GenTexture();
 			Raytracer.Init();
 		}
 		protected override void OnUnload( EventArgs e )
