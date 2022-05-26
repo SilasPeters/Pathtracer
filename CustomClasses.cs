@@ -14,8 +14,6 @@ namespace EpicRaytracer
 		public Vector3 EntryPoint    { get; set; }
 		public Vector3 DirectionVect { get; set; }
 
-		//float freq;
-
 		public Ray(Vector3 entryPoint, Vector3 direction) {
 			this.EntryPoint    = entryPoint;
 			this.DirectionVect = direction.Normalized();
@@ -26,11 +24,10 @@ namespace EpicRaytracer
 	
 	public class LightSource
 	{
-		public Vector3 Pos       { get; }
-		public float   Radius    { get; }
-		public float   Freq      { get; }
-		
-		private readonly Vector3 Color;
+		public Vector3 Pos    { get; }
+		public float   Radius { get; }
+		public float   Freq   { get; }
+		public Vector3 Color  { get; }
 
 		/// <param name="radius">Only used for the debugcam</param>
 		public LightSource(Vector3 pos, Vector3 color, float freq, float radius = 1) {	
@@ -39,15 +36,12 @@ namespace EpicRaytracer
 			this.Freq   = freq;
 			this.Radius = radius;
 		}
-
-		/// <summary>Returns the color that is dimmed based on distance 't'</summary>
-		public Vector3 CalculateColor(float t)
+		
+		public Vector3 CalculateColorAt(Object obj, Vector3 pointOnObject)
 		{
-			//todo: moet worden bijgewerkt zodat afstand een factor is op intensity, maar dit gaat gepaard met andere
-			//changes dus ik laat dit voor nu
-
-			return Color;
-		}
+			Vector3 N = Pos - obj.Pos;
+			return 1 / N.LengthSquared * Color * obj.Color * Math.Max(0, Vector3.Dot(obj.GetNormalAt(pointOnObject), N));
+		} 
 	}
 	
 	#region Objects
@@ -63,6 +57,7 @@ namespace EpicRaytracer
 
 		public abstract bool    TryIntersect(Ray ray, out IntersectionInfo ii);
 		public abstract Vector3 GetNormalAt(Vector3 pointOnObject);
+		
 		//todo: normal vector is always to the outside [REFRACTION] - wat bedoelden we hier mee? Wanneer was dit van toepassing?
 	}
 	public class Sphere : Object
@@ -74,10 +69,6 @@ namespace EpicRaytracer
 		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			//Vector3 e = ray.EntryPoint;
-			//Vector3 d = ray.DirectionVect;
-			//Vector3 p = Pos;
-
 			float a = Vector3.Dot(ray.DirectionVect, ray.DirectionVect); //== length^2
 					//d.X*d.X + d.Y*d.Y + d.Z*d.Z;
 			float b = 2 * Vector3.Dot(ray.DirectionVect, ray.EntryPoint - Pos);
@@ -88,17 +79,20 @@ namespace EpicRaytracer
 
 			if (dis >= 0)
 			{
-				float t;
+				float t = dis > 0
+					? t = (float)(-b + Math.Sqrt(dis)) / (2 * a)
+					: t = -b / (2 * a);
+				/*float t;
 				if (dis == 0)
 					t = -b / (2 * a);
 				else //dis > 0
-				//{
-					//var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
-						//? Math.Abs(-Math.Sqrt(dis))
-						//Math.Sqrt(dis);
+				{
+					var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
+						? Math.Abs(-Math.Sqrt(dis))
+						Math.Sqrt(dis);
 					t = (float)(-b + Math.Sqrt(dis)) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
 					// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
-				//}
+				}*/
 				
 				ii = new IntersectionInfo(ray, t, this);
 				return true;
@@ -203,18 +197,18 @@ namespace EpicRaytracer
 								  //Yet, all items are readonly anyway so this is pratically a struct.
 	{
 		public Ray IntersectedRay { get; }
+		public Object  Object { get; }
 		public Vector3 Point  { get; }
 		public Vector3 Normal { get; }
-		public float   t      { get; } //todo: gebruik t om te bepalen of een intersection wel relevant is bij 100 objecten etc. dinges
-		public Object  Object { get; }
+		public float   t      { get; }
 
 		public const IntersectionInfo None = null;
 
 		public IntersectionInfo(Ray intersectedRay, float t, Object obj)
 		{
 			this.IntersectedRay = intersectedRay;
-			this.t              = t;
 			this.Object         = obj;
+			this.t              = t;
 			
 			this.Point          = intersectedRay.EntryPoint + intersectedRay.DirectionVect * t;
 			this.Normal         = obj.GetNormalAt(Point);

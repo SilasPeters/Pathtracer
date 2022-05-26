@@ -18,49 +18,24 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 GetColor(Ray ray)
+		public static Vector3 CalculatePixel(Ray ray)
 		{
-			if (TryIntersect(ray, out IntersectionInfo ii)) //intersection
-			{
-				return ii.Object.Color * getLighting(ii.Point);
-			}
-			else //no intersection
-			{
-				return Vector3.Zero;
-			}
-		}
-
-		private static Vector3 getLighting(Vector3 point)
-		{
-			Vector3 lightColor = new Vector3(0.5f, 0.5f, 0.5f);
-
-			Ray shadowray = new Ray(point, Vector3.Zero);
-			foreach (var lightSource in lightSources)
-			{
-				float d = (lightSource.Pos - point).LengthFast;
-				shadowray.SetDir(lightSource.Pos - point);
-				if (TryIntersect(shadowray, out IntersectionInfo ii)) //intersection
-				{
-					if (!(ii.t > Raytracer.Epsilon && ii.t < d - Raytracer.Epsilon)) //incorrect intersection
-						lightColor += lightSource.CalculateColor(ii.t);
-				}
-				else
-				{
-					lightColor += lightSource.CalculateColor(d);
-				}
-			}
-
-			return lightColor;
+			// <== todo
 		}
 
 		public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
 		{
+			float  t = float.MaxValue;
+			Object o = null;
+			
 			foreach (Object obj in renderedObjects)
-				if (obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii))
-					return true;
+				if (obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii) && iiiiiiiiiiiiiiiiiii.t < t) {
+					t = iiiiiiiiiiiiiiiiiii.t;
+					o = obj;
+				}
 
-			iiiiiiiiiiiiiiiiiii = IntersectionInfo.None;
-			return false;
+			iiiiiiiiiiiiiiiiiii = new IntersectionInfo(ray, t, o);
+			return o != null;
 		}
 	}
 	
@@ -94,7 +69,7 @@ namespace EpicRaytracer
 			Up            = up.Normalized();
 			DisplayRegion = displayRegion;
 
-			Right = Vector3.Cross(Up, Front).Normalized();
+			Right = Vector3.Cross(Up, Front).Normalized(); //big brain
 			Lens  = new Lens(this, lensDistance);
 		}
 		
@@ -121,11 +96,11 @@ namespace EpicRaytracer
 				{
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
-					if (Scene.TryIntersect(viewRay, out IntersectionInfo ii))
-					{
+					//if (Scene.TryIntersect(viewRay, out IntersectionInfo ii))
+					//{
 						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-							= Colors.Make(Scene.GetColor(viewRay));
-					}
+							= Colors.Make(Scene.CalculatePixel(viewRay));
+					//}
 				}
 		}
 	}

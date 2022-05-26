@@ -17,12 +17,12 @@ namespace Template
 
 		public static void Init()
 		{
-			Scene.AddObject(new Sphere(new Vector3(-4,     0,  0), 2f, Vector3.One));
+			Scene.AddObject(new Sphere(new Vector3(-4,     0,  0), 1.5f, Vector3.One));
 			Scene.AddObject(new Sphere(new Vector3(0,      0,  0), 1f, Vector3.One));
 			Scene.AddObject(new Sphere(new Vector3(4,      0,  0), 2f, Vector3.One));
 			Scene.AddLight(new LightSource(new Vector3(0f, 5f, 0f), Vector3.One, 1));
 			//Scene.AddLight(new LightSource(new Vector3(-3f, 2f, -3f), 1, 1));
-			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), -Vector3.UnitY, new Vector3(0.2f, 0.2f, 0.2f)));
+			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), new Vector3(0.2f,-1, 0f), new Vector3(0.2f, 0.2f, 0.2f)));
 
 			_cameraStances = new []
 			{
@@ -31,13 +31,9 @@ namespace Template
 					//new DebugCamera(new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
 				},
 				new BasicCamera[] { // normal state 2
-					new MainCamera (new Vector3(3, 0, -3), new Vector3(-0.5f, 0f, 0.5f), Vector3.UnitY, new Rectangle(0, 0, 711, 200), 1),
+					new MainCamera (new Vector3(3, 5, -5), new Vector3(-0.5f, -0.5f, 0.5f), Vector3.UnitY, new Rectangle(0, 0, 711, 400), 1),
 					//new DebugCamera(new Vector3(0, 0, -10), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
-				},
-				//new BasicCamera[] { // debug state
-				//	new MainCamera (new Vector3(0, 0, -10), Vector3.UnitZ, Vector3.UnitY, new Rectangle(0, 0, 800, 400)),
-				//	//new DebugCamera(new Vector3(0, 0, -10), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
-				//}
+				}
 			};
 		}
 		
