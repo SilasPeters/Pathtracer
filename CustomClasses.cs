@@ -32,7 +32,7 @@ namespace EpicRaytracer
 		/// <param name="radius">Only used for the debugcam</param>
 		public LightSource(Vector3 pos, Vector3 color, float freq, float radius = 1) {	
 			this.Pos    = pos;
-			this.Color  = color;
+			this.Color  = color * 30;
 			this.Freq   = freq;
 			this.Radius = radius;
 		}

@@ -20,9 +20,10 @@ namespace EpicRaytracer
 
 		public static Vector3 CalculatePixel(Ray ray)
 		{
-			Vector3 color = new Vector3(0, 0, 0);
+			Vector3 color = Vector3.Zero;
 			if (TryIntersect(ray, out IntersectionInfo ii))
 			{
+				if (color.LengthSquared == 0) color += 0.2f * ii.Object.Color; //ambient level
                 foreach (LightSource ls in lightSources)
                 {
 					Vector3 toLight = new Vector3(ls.Pos - ii.Point);
