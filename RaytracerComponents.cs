@@ -26,9 +26,8 @@ namespace EpicRaytracer
                 foreach (LightSource ls in lightSources)
                 {
 					Vector3 toLight = new Vector3(ls.Pos - ii.Point);
-					color = new Vector3(1 / toLight.LengthSquared * ls.Color * ii.Object.Color * Math.Max(0, Vector3.Dot(ii.Normal.Normalized(), toLight.Normalized())));
+					color += new Vector3(1 / toLight.LengthSquared * ls.Color * ii.Object.Color * Math.Max(0, Vector3.Dot(ii.Normal.Normalized(), toLight.Normalized())));
                 }
-				//return new Vector3(1, 1, 1);
 			}
 			return color;
 		}
@@ -106,11 +105,8 @@ namespace EpicRaytracer
 				{
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
-					//if (Scene.TryIntersect(viewRay, out IntersectionInfo ii))
-					//{
 						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
 							= Colors.Make(Scene.CalculatePixel(viewRay));
-					//}
 				}
 		}
 	}
