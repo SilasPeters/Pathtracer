@@ -211,7 +211,8 @@ namespace EpicRaytracer
 			this.t              = t;
 			
 			this.Point          = intersectedRay.EntryPoint + intersectedRay.DirectionVect * t;
-			this.Normal         = obj.GetNormalAt(Point);
+			if(obj != null)
+				this.Normal         = obj.GetNormalAt(Point);
 		}
 
 		
