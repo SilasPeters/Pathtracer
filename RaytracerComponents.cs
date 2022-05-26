@@ -18,17 +18,22 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 CalculatePixel(Ray ray)
+		public static Vector3 CalculatePixel(Ray viewRay, Vector3 camPos)
 		{
 			Vector3 color = Vector3.Zero;
-			if (TryIntersect(ray, out IntersectionInfo ii))
+			if (TryIntersect(viewRay, out IntersectionInfo ii))
 			{
-				if (color.LengthSquared == 0) color += 0.2f * ii.Object.Color; //ambient level
                 foreach (LightSource ls in lightSources)
                 {
-					Vector3 toLight = new Vector3(ls.Pos - ii.Point);
-					color += new Vector3(1 / toLight.LengthSquared * ls.Color * ii.Object.Color * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized())));
+	                Vector3 toLight = ls.Pos - ii.Point;
+					Vector3 V       = (camPos - ii.Point).Normalized();
+					Vector3 R       = (toLight - 2 * Vector3.Dot(toLight.Normalized(), ii.Normal) * ii.Normal).Normalized();
+					color += new Vector3(1 / toLight.LengthSquared * ls.Color *
+					                     (ii.Object.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized()))
+					                      + ii.Object.Mat.SpecularCo * (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
+					                     ));
                 }
+				color += Raytracer.AmbientLightLevel * ii.Object.Mat.DiffuseCo;
 			}
 			return color;
 		}
@@ -107,7 +112,7 @@ namespace EpicRaytracer
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
 						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-							= Colors.Make(Scene.CalculatePixel(viewRay));
+							= Colors.Make(Scene.CalculatePixel(viewRay, Pos));
 				}
 		}
 	}

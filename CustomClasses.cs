@@ -32,7 +32,7 @@ namespace EpicRaytracer
 		/// <param name="radius">Only used for the debugcam</param>
 		public LightSource(Vector3 pos, Vector3 color, float freq, float radius = 1) {	
 			this.Pos    = pos;
-			this.Color  = color * 30;
+			this.Color  = color * 30; //todo
 			this.Freq   = freq;
 			this.Radius = radius;
 		}
@@ -40,19 +40,19 @@ namespace EpicRaytracer
 		public Vector3 CalculateColorAt(Object obj, Vector3 pointOnObject)
 		{
 			Vector3 N = Pos - obj.Pos;
-			return 1 / N.LengthSquared * Color * obj.Color * Math.Max(0, Vector3.Dot(obj.GetNormalAt(pointOnObject), N));
+			return 1 / N.LengthSquared * Color * obj.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(obj.GetNormalAt(pointOnObject), N));
 		} 
 	}
 	
 	#region Objects
 	public abstract class Object
 	{
-		public Vector3 Pos   { get; protected set; }
-		public Vector3 Color { get; protected set; }
+		public Vector3  Pos { get; protected set; }
+		public Material Mat { get; }
 
-		protected Object(Vector3 pos, Vector3 color) {
-			Pos   = pos;
-			Color = color;
+		protected Object(Vector3 pos, Material material) {
+			Pos = pos;
+			Mat = material;
 		}
 
 		public abstract bool    TryIntersect(Ray ray, out IntersectionInfo ii);
@@ -63,7 +63,7 @@ namespace EpicRaytracer
 	public class Sphere : Object
 	{
 		public float Radius { get; protected set; }
-		public Sphere(Vector3 pos, float radius, Vector3 color) : base(pos, color) {
+		public Sphere(Vector3 pos, float radius, Material material) : base(pos, material) {
 			Radius = radius;
 		}
 		
@@ -80,8 +80,8 @@ namespace EpicRaytracer
 			if (dis >= 0)
 			{
 				float t = dis > 0
-					? t = (float)(-b + Math.Sqrt(dis)) / (2 * a)
-					: t = -b / (2 * a);
+					? (float)(-b + Math.Sqrt(dis)) / (2 * a)
+					: -b / (2 * a);
 				/*float t;
 				if (dis == 0)
 					t = -b / (2 * a);
@@ -111,7 +111,7 @@ namespace EpicRaytracer
 	{
 		public Vector3 Normal { get; protected set; }
 
-		public Plane(Vector3 pos, Vector3 normal, Vector3 color) : base(pos, color) {
+		public Plane(Vector3 pos, Vector3 normal, Material material) : base(pos, material) {
 			Normal = normal.Normalized();
 		}
 
@@ -154,7 +154,7 @@ namespace EpicRaytracer
 	{
 		public Vector3 Min { get; protected set;} //todo: Shouldn't we ask for vertexes? Otherwise a quad is always square
 		public Vector3 Max { get; protected set;}
-		public Quad(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Vector3 color) : base(pos, normal, color) {
+		public Quad(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Material material) : base(pos, normal, material) {
 			this.Min = min;
 			this.Max = max;
 		}
@@ -217,5 +217,28 @@ namespace EpicRaytracer
 
 		
 		public override string ToString() => $"IntPoint: {Point}, Normal: {Normal}";
+	}
+
+	public struct Material
+	{
+		public readonly bool IsMirror;
+		public readonly Vector3 SpecularCo;
+		public readonly Vector3 DiffuseCo;
+		public readonly Vector3 AmbientCo;
+
+		/// <summary>Creates a mirror</summary>
+		public Material(Vector3 specularCo) {
+			IsMirror   = true;
+			SpecularCo = specularCo;
+			DiffuseCo  = Vector3.Zero;
+			AmbientCo  = Vector3.Zero;
+		}
+		/// <summary>Creates a mirror</summary>
+		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo) {
+			IsMirror   = false;
+			SpecularCo = specularCo;
+			DiffuseCo  = diffuseCo;
+			AmbientCo  = ambientCo;
+		}
 	}
 }

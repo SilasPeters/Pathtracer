@@ -9,7 +9,9 @@ namespace Template
 	{
 		public static Display Display;
 		public static Size DisplaySize = new Size(711, 400);
-		public static float Epsilon = 0.001f;
+		public const float Epsilon = 0.001f;
+		public const float Glossyness = 50;
+		public const float AmbientLightLevel = 0.2f;
 
 		private static BasicCamera[][] _cameraStances;
 		private static int _currentCamStance = 0;
@@ -17,18 +19,20 @@ namespace Template
 
 		public static void Init()
 		{
-			Scene.AddObject(new Sphere(new Vector3(-4,     0,  0), 1.5f, Vector3.One));
-			Scene.AddObject(new Sphere(new Vector3(0,      0,  0), 1f, new Vector3(0,1,1)));
-			Scene.AddObject(new Sphere(new Vector3(4,      0,  0), 2f, Vector3.One));
-			Scene.AddLight(new LightSource(new Vector3(0f, 1.3f, 0f), new Vector3(1,1,0), 1));
-			Scene.AddLight(new LightSource(new Vector3(0f, 2f, 0f), new Vector3(0,0,1), 1));
-			Scene.AddLight(new LightSource(new Vector3(-3f, 2f, -3f), Vector3.One, 1));
-			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), new Vector3(0.2f,-1, 0f), new Vector3(1f, 1f, 1f)));
+			Material m1 = new Material(new Vector3(0, 1, 1), Vector3.One/2, new Vector3(1, 1, 1)*10);
+			Material m2 = new Material(new Vector3(1, 1, 1), Vector3.One/2, new Vector3(1, 1, 1)*10);
+			Scene.AddObject(new Sphere(new Vector3(-4,     0,    0), 1.5f, m1));
+			Scene.AddObject(new Sphere(new Vector3(0,      0,    0), 1f,   m1));
+			Scene.AddObject(new Sphere(new Vector3(4,      0,    0), 2f,   m1));
+			Scene.AddLight(new LightSource(new Vector3(0f, 2f, -1f), new Vector3(1, 1, 0), 1));
+			//Scene.AddLight(new LightSource(new Vector3(0f, 2f, 0f), new Vector3(0,0,1), 1));
+			//Scene.AddLight(new LightSource(new Vector3(-3f, 2f, -3f), Vector3.One, 1));
+			Scene.AddObject(new Plane(new Vector3(0, -2f, 0), new Vector3(0,-1, 0), m2));
 
 			_cameraStances = new []
 			{
 				new BasicCamera[] { // normal state 1
-					new MainCamera (new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(0, 0, 711, 200), 1),
+					new MainCamera (new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(0, 0, 711, 400), 1),
 					//new DebugCamera(new Vector3(0, 0, -5), Vector3.UnitZ, Vector3.UnitY, new Rectangle(400, 0, 400, 400))
 				},
 				new BasicCamera[] { // normal state 2
