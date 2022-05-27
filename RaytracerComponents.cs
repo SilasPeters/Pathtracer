@@ -12,8 +12,8 @@ namespace EpicRaytracer
 {
 	public static class Scene
 	{
-		private static IList<Object> renderedObjects = new List<Object>();
-		private static IList<LightSource> lightSources = new List<LightSource>();
+		public static IList<Object> renderedObjects = new List<Object>();
+		public static IList<LightSource> lightSources = new List<LightSource>();
 
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
@@ -21,30 +21,37 @@ namespace EpicRaytracer
 		public static Vector3 CalculatePixel(Ray viewRay, Vector3 camPos)
 		{
 			Vector3 color = Vector3.Zero;
-			if (TryIntersect(viewRay, out IntersectionInfo ii))
+			if (TryIntersect(viewRay, out IntersectionInfo ii)) //we hit an object
 			{
-                foreach (LightSource ls in lightSources)
-                {
-	                Vector3 toLight = ls.Pos - ii.Point;
-					Vector3 V       = (camPos - ii.Point).Normalized();
-					Vector3 R       = (toLight - 2 * Vector3.Dot(toLight.Normalized(), ii.Normal) * ii.Normal).Normalized();
-					color += new Vector3(1 / toLight.LengthSquared * ls.Color *
-					                     (ii.Object.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized()))
-					                      + ii.Object.Mat.SpecularCo * (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
-					                     ));
-                }
+				//if (mirror) > return recursie met gespiegeld langs de Normal
+				
+				foreach (LightSource ls in lightSources)
+				{
+					Vector3 toLight = ls.Pos - ii.Point;
+					if (!TryIntersect(new Ray(ii.Point, toLight.Normalized()), out IntersectionInfo iii, ii.Object)) //not lit
+					{
+						Vector3 V = (camPos - ii.Point).Normalized();
+						Vector3 R = (toLight - 2 * Vector3.Dot(toLight.Normalized(), ii.Normal) * ii.Normal).Normalized();
+						color += new Vector3(1 / toLight.LengthSquared * ls.Color *
+						                     (ii.Object.Mat.DiffuseCo * Math.Max(0,
+							                      Vector3.Dot(ii.Normal, toLight.Normalized()))
+						                      + ii.Object.Mat.SpecularCo *
+						                      (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
+						                     ));
+					}
+				}
 				color += Raytracer.AmbientLightLevel * ii.Object.Mat.DiffuseCo;
 			}
 			return color;
 		}
 
-		public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii)
+		public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii, Object self = null)
 		{
 			float  t = float.MaxValue;
 			Object o = null;
 			
 			foreach (Object obj in renderedObjects)
-				if (obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii) && iiiiiiiiiiiiiiiiiii.t < t) {
+				if (obj != self && obj.TryIntersect(ray, out iiiiiiiiiiiiiiiiiii) && iiiiiiiiiiiiiiiiiii.t < t) {
 					t = iiiiiiiiiiiiiiiiiii.t;
 					o = obj;
 				}
@@ -126,10 +133,48 @@ namespace EpicRaytracer
 
 		public override void RenderImage()
 		{
-			Vector3 filter = Vector3.One - Front; //doe Math.Abs(Front)
+			float   scale        = 12;
+			float   numberOfRays = 20;
+			Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
+
+			MainCamera cam    = (MainCamera)Raytracer._cameraStances[Raytracer._currentCamStance][0];
+			//Point      camPos = To2D(cam.Pos);
+			for (int i = 0; i < numberOfRays; i++)
+			{
+				float t   = 0;
+				Ray   ray = new Ray(cam.Pos, Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
+				if (Scene.TryIntersect(ray, out IntersectionInfo ii))
+					t = ii.t;
+				
+				//Raytracer.Display.Line(camPos.X + DisplayRegion.Left, camPos.Y + DisplayRegion.Top, 0xffffff);
+			}
 			
-			return;
-			throw new NotImplementedException();
+			
+			
+			foreach (Object o in Scene.renderedObjects)
+			{
+				if (o is Sphere s)
+				{
+					for (float d = 0; d < 1; d += 1f/360)
+					{
+						Vector3 pos = s.Pos + new Vector3(
+							(float)(s.Radius * Math.Cos(d * 2 * Math.PI)), 0,
+							(float)(s.Radius * Math.Sin(d * 2 * Math.PI)));
+						
+						Draw(To2D(pos), 0xffffff);
+					}
+
+				}
+			}
+
+			Point To2D(Vector3 objectPos)
+			{
+				Point p = new Point((int)(objectPos.X / scale * DisplayRegion.Height),
+					-(int)(objectPos.Z / scale * DisplayRegion.Height));
+				return p + new Size(DisplayRegion.Width/2, DisplayRegion.Height/2);
+			}
+			
+			void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + DisplayRegion.Left + (pos.Y + DisplayRegion.Top) * Raytracer.Display.width] = c;
 		}
 	}
 }

@@ -36,12 +36,6 @@ namespace EpicRaytracer
 			this.Freq   = freq;
 			this.Radius = radius;
 		}
-		
-		public Vector3 CalculateColorAt(Object obj, Vector3 pointOnObject)
-		{
-			Vector3 N = Pos - obj.Pos;
-			return 1 / N.LengthSquared * Color * obj.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(obj.GetNormalAt(pointOnObject), N));
-		} 
 	}
 	
 	#region Objects
@@ -95,7 +89,7 @@ namespace EpicRaytracer
 				}*/
 				
 				ii = new IntersectionInfo(ray, t, this);
-				return true;
+				return t > 0;
 			}
 			//else
 			ii = IntersectionInfo.None;
@@ -135,7 +129,7 @@ namespace EpicRaytracer
 			}*/
 
 			// assuming vectors are all normalized
-			float denom = Vector3.Dot(Normal, ray.DirectionVect);
+			float denom = Vector3.Dot(ray.DirectionVect, Normal);
 			if (denom > 1e-6)
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
