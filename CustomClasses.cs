@@ -20,6 +20,7 @@ namespace EpicRaytracer
 		}
 
 		public void SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
+		public void SetPoint(Vector3 point) => EntryPoint = point;
 	}
 	
 	public class LightSource
@@ -221,18 +222,13 @@ namespace EpicRaytracer
 		public readonly Vector3 AmbientCo;
 
 		/// <summary>Creates a mirror</summary>
-		public Material(Vector3 specularCo) {
-			IsMirror   = true;
-			SpecularCo = specularCo;
-			DiffuseCo  = Vector3.Zero;
-			AmbientCo  = Vector3.Zero;
-		}
-		/// <summary>Creates a mirror</summary>
-		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo) {
-			IsMirror   = false;
+
+		/// <summary>Creates a nonmirror</summary>
+		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo, bool ismirror = false) {
 			SpecularCo = specularCo;
 			DiffuseCo  = diffuseCo;
 			AmbientCo  = ambientCo;
+			IsMirror = ismirror;
 		}
 	}
 }

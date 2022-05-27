@@ -20,21 +20,15 @@ namespace Template
 		public static void Init()
 		{
 			Material m11 = new Material(new Vector3(0,     1,  0), Vector3.One/2, new Vector3(1, 1, 1)*10);
-			Material m12 = new Material(new Vector3(1,     0,  0), Vector3.One/2, new Vector3(1, 1, 1)*10);
-			Material m13 = new Material(new Vector3(0,     0,  1), Vector3.One/2, new Vector3(1, 1, 1)*10);
-			Material m2  = new Material(new Vector3(1,     1,  1), Vector3.One/2, new Vector3(1, 1, 1)*10);
-			//Scene.AddObject(new Sphere(new Vector3(-2.5f,  0,  0), 1f, m13));
-			Scene.AddObject(new Sphere(new Vector3(0,      0,  0), 1f, m11));
+			Material m12 = new Material(new Vector3(1,     0,  1), Vector3.One/2, new Vector3(1, 1, 1)*10);
+			Material mir = new Material(new Vector3(1,     1,  1), Vector3.One/2, new Vector3(1, 1, 1)*10, true);
+
+			Scene.AddObject(new Sphere(new Vector3(0,      0,  0), 1f, mir));
 			Scene.AddObject(new Sphere(new Vector3(0,      2f,  0), 0.3f, m11));
-			Scene.AddObject(new Sphere(new Vector3(1,      2f,  3), 0.3f, m11));
-			Scene.AddObject(new Sphere(new Vector3(2,      2f,  2), 0.3f, m11));
-			Scene.AddObject(new Sphere(new Vector3(3,      2f,  1), 0.3f, m11));
-			//Scene.AddObject(new Sphere(new Vector3(2.5f,   0,  0), 1f, m12));
+			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), new Vector3(0,-1, 0), m12));
+
 			Scene.AddLight(new LightSource(new Vector3(0, 3, 0f), new Vector3(1, 1, 0.4f), 1));
 			Scene.AddLight(new LightSource(new Vector3(-2, 1, 0f), new Vector3(1, 1, 0.4f), 1));
-			//Scene.AddLight(new LightSource(new Vector3(0f, 2f, 0f), new Vector3(0,0,1), 1));
-			//Scene.AddLight(new LightSource(new Vector3(-3f, 2f, -3f), Vector3.One, 1));
-			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), new Vector3(0,-1, 0), m2));
 
 			_cameraStances = new []
 			{
