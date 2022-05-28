@@ -126,30 +126,26 @@ namespace EpicRaytracer
 
 	public class DebugCamera : BasicCamera
 	{
-		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lenseDistance)
-			: base(pos, front, up, displayRegion, lenseDistance)
-		{
-		}
-
 		public override void RenderImage()
 		{
 			float   scale        = 12;
 			float   numberOfRays = 20;
+			int     colorViewray = 0xff00ff;
+			int     colorSphere  = 0xffffff;
 			Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
 
 			MainCamera cam    = (MainCamera)Raytracer._cameraStances[Raytracer._currentCamStance][0];
-			//Point      camPos = To2D(cam.Pos);
+			Point      camPos = To2D(cam.Pos);
 			for (int i = 0; i < numberOfRays; i++)
 			{
-				float t   = 0;
-				Ray   ray = new Ray(cam.Pos, Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
+				float t   = 200 * scale; //always out of bounds
+				Ray   ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
 				if (Scene.TryIntersect(ray, out IntersectionInfo ii))
 					t = ii.t;
-				
-				//Raytracer.Display.Line(camPos.X + DisplayRegion.Left, camPos.Y + DisplayRegion.Top, 0xffffff);
+
+				Point iPos = To2D(ray.GetPoint(t));
+				Raytracer.Display.Line(camPos.X, camPos.Y, iPos.X, iPos.Y, colorViewray);
 			}
-			
-			
 			
 			foreach (Object o in Scene.renderedObjects)
 			{
@@ -161,7 +157,7 @@ namespace EpicRaytracer
 							(float)(s.Radius * Math.Cos(d * 2 * Math.PI)), 0,
 							(float)(s.Radius * Math.Sin(d * 2 * Math.PI)));
 						
-						Draw(To2D(pos), 0xffffff);
+						Draw(To2D(pos), colorSphere);
 					}
 
 				}
@@ -171,10 +167,15 @@ namespace EpicRaytracer
 			{
 				Point p = new Point((int)(objectPos.X / scale * DisplayRegion.Height),
 					-(int)(objectPos.Z / scale * DisplayRegion.Height));
-				return p + new Size(DisplayRegion.Width/2, DisplayRegion.Height/2);
+				return p + new Size(DisplayRegion.Width/2 + DisplayRegion.Left, DisplayRegion.Height/2 + DisplayRegion.Top);
 			}
 			
-			void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + DisplayRegion.Left + (pos.Y + DisplayRegion.Top) * Raytracer.Display.width] = c;
+			void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
+		}
+
+		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lenseDistance)
+			: base(pos, front, up, displayRegion, lenseDistance)
+		{
 		}
 	}
 }

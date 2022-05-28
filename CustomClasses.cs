@@ -19,7 +19,8 @@ namespace EpicRaytracer
 			this.DirectionVect = direction.Normalized();
 		}
 
-		public void SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
+		public void    SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
+		public Vector3 GetPoint(float t)   => EntryPoint + t * DirectionVect;
 	}
 	
 	public class LightSource
@@ -63,7 +64,7 @@ namespace EpicRaytracer
 		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			float a = Vector3.Dot(ray.DirectionVect, ray.DirectionVect); //== length^2
+			/*float a = Vector3.Dot(ray.DirectionVect, ray.DirectionVect); //== length^2
 					//d.X*d.X + d.Y*d.Y + d.Z*d.Z;
 			float b = 2 * Vector3.Dot(ray.DirectionVect, ray.EntryPoint - Pos);
 					//2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
@@ -74,26 +75,29 @@ namespace EpicRaytracer
 			if (dis >= 0)
 			{
 				float t = dis > 0
-					? (float)(-b + Math.Sqrt(dis)) / (2 * a)
+					? (float)(-b - Math.Sqrt(dis)) / (2 * a)
 					: -b / (2 * a);
-				/*float t;
-				if (dis == 0)
-					t = -b / (2 * a);
-				else //dis > 0
-				{
-					var magicNumber = Math.Abs(-Math.Sqrt(dis)) < Math.Abs(Math.Sqrt(dis))
-						? Math.Abs(-Math.Sqrt(dis))
-						Math.Sqrt(dis);
-					t = (float)(-b + Math.Sqrt(dis)) / (2 * a);  // uitgaande van dat elke oplossing (met + of - wortel(d) positief is, gaat deze formule standaard voor de kleinste waarde.
-					// wanneer oplossingen negatief worden (zoals bij verkeerde orientatie) zal dit het punt het verste weg van 'e' geven.
-				}*/
-				
+
 				ii = new IntersectionInfo(ray, t, this);
 				return t > 0;
 			}
 			//else
 			ii = IntersectionInfo.None;
-			return false;
+			return false;*/
+
+			Vector3 c  = Pos - ray.EntryPoint;
+			float   t  = Vector3.Dot(c, ray.DirectionVect);
+			Vector3 q  = c - t * ray.DirectionVect;
+			float   p2 = q.LengthSquared;
+			if (p2 > Radius * Radius)
+			{
+				ii = new IntersectionInfo(ray, t, this);
+				return false;
+			}
+			t -= (float)Math.Sqrt(Radius * Radius - p2);
+
+			ii = new IntersectionInfo(ray, t, this);
+			return true;
 		}
 
 		public override Vector3 GetNormalAt(Vector3 pointOnObject) => (pointOnObject - Pos) / Radius; //accurate enough for normalization
@@ -204,7 +208,7 @@ namespace EpicRaytracer
 			this.Object         = obj;
 			this.t              = t;
 			
-			this.Point          = intersectedRay.EntryPoint + intersectedRay.DirectionVect * t;
+			this.Point          = intersectedRay.GetPoint(t);
 			if(obj != null)
 				this.Normal         = obj.GetNormalAt(Point);
 		}
