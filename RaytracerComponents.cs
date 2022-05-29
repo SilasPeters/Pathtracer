@@ -72,8 +72,8 @@ namespace EpicRaytracer
 	
 	public struct Lens
 	{
-		private readonly Vector3 horizontal, vertical;
-		private readonly Vector3 topLeft;
+		public readonly Vector3 horizontal, vertical;
+		public readonly Vector3 topLeft;
 		
 		public Lens(BasicCamera cam, float distance, float height = 1f) {
 			var aspectRatio = (float)cam.DisplayRegion.Width / cam.DisplayRegion.Height;
@@ -141,6 +141,8 @@ namespace EpicRaytracer
 			float   numberOfRays = 20;
 			int     colorViewray = 0xff00ff;
 			int     colorSphere  = 0xffffff;
+			int     colorCam	 = 0xffff00;
+			int     colorScreen	 = 0xffffff;
 			Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
 
 			MainCamera cam    = (MainCamera)Raytracer._cameraStances[Raytracer._currentCamStance][0];
@@ -155,6 +157,7 @@ namespace EpicRaytracer
 				Point iPos = To2D(ray.GetPoint(t));
 				Raytracer.Display.Line(camPos.X, camPos.Y, iPos.X, iPos.Y, colorViewray);
 			}
+			Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
 			
 			foreach (Object o in Scene.renderedObjects)
 			{
@@ -171,6 +174,10 @@ namespace EpicRaytracer
 
 				}
 			}
+
+			Point screenLeft = To2D(cam.Lens.topLeft + cam.Pos);
+			Point screenRight = To2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
+			Raytracer.Display.Line(screenLeft.X, screenLeft.Y, screenRight.X, screenRight.Y, colorScreen);
 
 			Point To2D(Vector3 objectPos)
 			{
