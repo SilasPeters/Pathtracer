@@ -18,13 +18,22 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 CalculatePixel(Ray viewRay, Vector3 camPos)
+		public static Vector3 CalculatePixel(Ray viewRay, Vector3 camPos, int layers)
 		{
 			Vector3 color = Vector3.Zero;
 			if (TryIntersect(viewRay, out IntersectionInfo ii)) //we hit an object
 			{
 				//if (mirror) > return recursie met gespiegeld langs de Normal
-				
+				if (ii.Object.Mat.IsMirror && layers<10) 
+				{
+					
+					Vector3 V = camPos - ii.Point;
+					Vector3 R = V - 2*(Vector3.Dot(V.Normalized(),ii.Normal) * ii.Normal);
+					viewRay.SetDir(R.Normalized());
+					viewRay.SetPoint(ii.Point);
+					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, camPos, ++layers); ;
+				}
+
 				foreach (LightSource ls in lightSources)
 				{
 					Vector3 toLight = ls.Pos - ii.Point;
@@ -119,7 +128,7 @@ namespace EpicRaytracer
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
 						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-							= Colors.Make(Scene.CalculatePixel(viewRay, Pos));
+							= Colors.Make(Scene.CalculatePixel(viewRay, Pos, 0));
 				}
 		}
 	}
