@@ -72,14 +72,20 @@ namespace EpicRaytracer
 	
 	public struct Lens
 	{
-		public readonly Vector3 horizontal, vertical;
-		public readonly Vector3 topLeft;
+		private readonly BasicCamera cam;
+		private float height, aspectRatio;
+		public float Distance;
+
+		public Vector3 horizontal => cam.Right * height * aspectRatio;
+		public Vector3 vertical   => cam.Up * height;
+		public Vector3 topLeft    => cam.Front * Distance - horizontal / 2 + vertical / 2;
 		
 		public Lens(BasicCamera cam, float distance, float height = 1f) {
-			var aspectRatio = (float)cam.DisplayRegion.Width / cam.DisplayRegion.Height;
-			horizontal = cam.Right * height * aspectRatio;
-			vertical   = cam.Up * height;
-			topLeft    = cam.Front * distance - horizontal / 2 + vertical / 2;
+			this.cam      = cam;
+			this.Distance = distance;
+			this.height   = height;
+			
+			this.aspectRatio = (float)cam.DisplayRegion.Width / cam.DisplayRegion.Height;
 		}
 
 		public Vector3 GetDirToPixel(float xPercentage, float yPercentage) => topLeft + horizontal * xPercentage - vertical * yPercentage;
@@ -92,29 +98,54 @@ namespace EpicRaytracer
 		public Vector3   Up            { get; protected set; }
 		public Vector3   Right         { get; protected set; }
 		public Rectangle DisplayRegion { get; protected set; }
-		public Lens      Lens          { get; protected set; }
+		public Lens Lens;
+		public Vector3   Rotation      { get; protected set; }
 
-		public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lensDistance) {
+		public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV) {
 			Pos           = pos;
 			Front         = front.Normalized();
 			Up            = up.Normalized();
 			DisplayRegion = displayRegion;
 
 			Right = Vector3.Cross(Up, Front).Normalized(); //big brain
-			Lens  = new Lens(this, lensDistance);
+			Lens  = new Lens(this, 45f/FOV);
 		}
 		
 		public abstract void RenderImage();
 
-		public void Translate(Vector3 movement)          => Pos += movement;
-		public void Translate(float x, float y, float z) => Pos += new Vector3(x, y, z);
-		public void Rotate(Vector3 rotation)             => Front += rotation;
-		public void Rotate(float x, float y, float z)    => Front += new Vector3(x, y, z);
+		public void MoveForward(float amount)  => Pos += Front * amount;
+		public void MoveSidewards(float amount) => Pos += Right * amount;
+
+		public void Pivot(float x, float y, float z)
+		{
+			PivotX(x);
+			PivotY(y);
+			PivotZ(z);
+		}
+		public void PivotX(float degree)
+		{
+			Up         = new Vector3(Up.X, Cos(degree), Sin(degree));
+			Front      = Vector3.Cross(Right, Up).Normalized();
+			Rotation = new Vector3(degree, Rotation.Y, Rotation.Z);
+		}
+		public void PivotY(float degree) {
+			Front = new Vector3(Sin(degree), Front.Y, Cos(degree)).Normalized();
+			Right = Vector3.Cross(Up, Front).Normalized();
+			Rotation = new Vector3(Rotation.X, degree, Rotation.Z);
+		}
+		public void PivotZ(float degree) {
+			Right = new Vector3(Cos(degree), Sin(degree), Right.Z).Normalized();
+			Up    = Vector3.Cross(Front, Right).Normalized();
+			Rotation = new Vector3(Rotation.X, Rotation.Y, degree);
+		}
+		
+		float Sin(float degree) => (float)Math.Sin(MathHelper.DegreesToRadians(degree));
+		float Cos(float degree) => (float)Math.Cos(MathHelper.DegreesToRadians(degree));
 	}
 	public class MainCamera : BasicCamera
 	{
-		public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lensDistance)
-			: base(pos, front, up, displayRegion, lensDistance)
+		public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
+			: base(pos, front, up, displayRegion, FOV)
 		{
 		}
 
@@ -137,60 +168,68 @@ namespace EpicRaytracer
 	{
 		public override void RenderImage()
 		{
-			float   scale        = 12;
-			float   numberOfRays = 20;
-			int     colorViewray = 0xff00ff;
-			int     colorSphere  = 0xffffff;
-			int     colorCam	 = 0xffff00;
-			int     colorScreen	 = 0xffffff;
-			Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
-
-			MainCamera cam    = (MainCamera)Raytracer._cameraStances[Raytracer._currentCamStance][0];
-			Point      camPos = To2D(cam.Pos);
-			for (int i = 0; i < numberOfRays; i++)
+			try
 			{
-				float t   = 200 * scale; //always out of bounds
-				Ray   ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
-				if (Scene.TryIntersect(ray, out IntersectionInfo ii))
-					t = ii.t;
+				float   scale        = 30;
+				float   numberOfRays = 20;
+				int     colorViewray = 0xff00ff;
+				int     colorSphere  = 0xffffff;
+				int     colorCam     = 0xffff00;
+				int     colorScreen  = 0xffffff;
+				Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
 
-				Point iPos = To2D(ray.GetPoint(t));
-				Raytracer.Display.Line(camPos.X, camPos.Y, iPos.X, iPos.Y, colorViewray);
-			}
-			Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
-			
-			foreach (Object o in Scene.renderedObjects)
-			{
-				if (o is Sphere s)
+				BasicCamera cam    = Raytracer.CurrentCam;
+				Point       camPos = To2D(cam.Pos);
+				for (int i = 0; i < numberOfRays; i++)
 				{
-					for (float d = 0; d < 1; d += 1f/360)
-					{
-						Vector3 pos = s.Pos + new Vector3(
-							(float)(s.Radius * Math.Cos(d * 2 * Math.PI)), 0,
-							(float)(s.Radius * Math.Sin(d * 2 * Math.PI)));
-						
-						Draw(To2D(pos), colorSphere);
-					}
+					float t   = 200 * scale; //always out of bounds
+					Ray   ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
+					if (Scene.TryIntersect(ray, out IntersectionInfo ii))
+						t = ii.t;
 
+					Point iPos = To2D(ray.GetPoint(t));
+					Raytracer.Display.Line(camPos.X, camPos.Y, iPos.X, iPos.Y, colorViewray);
 				}
-			}
-
-			Point screenLeft = To2D(cam.Lens.topLeft + cam.Pos);
-			Point screenRight = To2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
-			Raytracer.Display.Line(screenLeft.X, screenLeft.Y, screenRight.X, screenRight.Y, colorScreen);
-
-			Point To2D(Vector3 objectPos)
-			{
-				Point p = new Point((int)(objectPos.X / scale * DisplayRegion.Height),
-					-(int)(objectPos.Z / scale * DisplayRegion.Height));
-				return p + new Size(DisplayRegion.Width/2 + DisplayRegion.Left, DisplayRegion.Height/2 + DisplayRegion.Top);
-			}
 			
-			void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
+				foreach (Object o in Scene.renderedObjects)
+				{
+					if (o is Sphere s)
+					{
+						for (float d = 0; d < 1; d += 1f/360)
+						{
+							Vector3 pos = s.Pos + new Vector3(
+								(float)(s.Radius * Math.Cos(d * 2 * Math.PI)), 0,
+								(float)(s.Radius * Math.Sin(d * 2 * Math.PI)));
+						
+							Draw(To2D(pos), colorSphere);
+						}
+
+					}
+				}
+
+				Point screenLeft  = To2D(cam.Lens.topLeft + cam.Pos);
+				Point screenRight = To2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
+				Raytracer.Display.Line(screenLeft.X, screenLeft.Y, screenRight.X, screenRight.Y, colorScreen);
+				
+				Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
+				
+				Point To2D(Vector3 objectPos)
+				{
+					Point p = new Point((int)(objectPos.X / scale * DisplayRegion.Height),
+						-(int)(objectPos.Z / scale * DisplayRegion.Height));
+					return p + new Size(DisplayRegion.Width/2 + DisplayRegion.Left, DisplayRegion.Height/2 + DisplayRegion.Top);
+				}
+
+				void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Attempted to draw an object outside of the display.\nIncrease the scale of the Debug Cam to fix missing objects");
+			}
 		}
 
-		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float lenseDistance)
-			: base(pos, front, up, displayRegion, lenseDistance)
+		public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
+			: base(pos, front, up, displayRegion, FOV)
 		{
 		}
 	}
