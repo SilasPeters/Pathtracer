@@ -8,7 +8,8 @@ namespace Template
 	static class Raytracer
 	{
 		public static Display Display;
-		public static Size DisplaySize = new Size(400, 200);
+		public static Size DisplaySize = new Size(800, 400);
+		public const float DebugScale = 10f;
 		public const float Epsilon = 0.001f;
 		public const float Glossyness = 50;
 		public const float AmbientLightLevel = 0.2f;
@@ -26,12 +27,12 @@ namespace Template
 			Material m12 = new Material(new Vector3(1, 0, 1), Vector3.One/2,   new Vector3(1, 1, 1)*10);
 			Material mir = new Material(new Vector3(1, 1, 1), Vector3.One / 2, new Vector3(1, 1, 1) * 10, true);
 
-			Scene.AddObject(new Sphere(new Vector3(0, 0,   0), 1f,   mir));
-			Scene.AddObject(new Sphere(new Vector3(0, 2f,  0), 0.3f, m11));
+			Scene.AddObject(new Sphere(new Vector3(0, 0.5f,   0), 1f, mir));
+			Scene.AddObject(new Sphere(new Vector3(2, 2f,  0), 1.3f, m11));
 			Scene.AddObject(new Plane(new Vector3(0,  -1f, 0), new Vector3(0, -1, 0), m12));
 
-			Scene.AddLight(new LightSource(new Vector3(0,  3, 0f), new Vector3(1, 1, 0.4f), 1));
-			Scene.AddLight(new LightSource(new Vector3(-2, 1, 0f), new Vector3(1, 1, 0.4f), 1));
+			Scene.AddLight(new LightSource(new Vector3(-3,  2, 0f), new Vector3(1, 1, 1f), 1));
+			//Scene.AddLight(new LightSource(new Vector3(-2, 1, 0f), new Vector3(1, 1, 0.4f), 1));
 
 			_cameraStances = new []
 			{

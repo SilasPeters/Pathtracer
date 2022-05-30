@@ -18,20 +18,20 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 CalculatePixel(Ray viewRay, Vector3 camPos, int layers)
+		public static Vector3 CalculatePixel(Ray viewRay, int layers, Object self = null)
 		{
 			Vector3 color = Vector3.Zero;
-			if (TryIntersect(viewRay, out IntersectionInfo ii)) //we hit an object
+			if (TryIntersect(viewRay, out IntersectionInfo ii, self)) //we hit an object
 			{
-				//if (mirror) > return recursie met gespiegeld langs de Normal
-				if (ii.Object.Mat.IsMirror && layers<10) 
+				if (ii.Object.Mat.IsMirror)
 				{
+					if (layers >= 10) return Vector3.Zero;
 					
-					Vector3 V = camPos - ii.Point;
-					Vector3 R = V - 2*(Vector3.Dot(V.Normalized(),ii.Normal) * ii.Normal);
-					viewRay.SetDir(R.Normalized());
+					Vector3 V = ii.Point - ii.IntersectedRay.EntryPoint;
+					Vector3 R = V - 2 * Vector3.Dot(V.Normalized(), ii.Normal) * ii.Normal;
+					viewRay.SetDir(R);
 					viewRay.SetPoint(ii.Point);
-					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, camPos, ++layers); ;
+					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, ++layers, ii.Object);
 				}
 
 				foreach (LightSource ls in lightSources)
@@ -39,13 +39,11 @@ namespace EpicRaytracer
 					Vector3 toLight = ls.Pos - ii.Point;
 					if (!TryIntersect(new Ray(ii.Point, toLight.Normalized()), out IntersectionInfo iii, ii.Object)) //not lit
 					{
-						Vector3 V = (camPos - ii.Point).Normalized();
+						Vector3 V = (ii.IntersectedRay.EntryPoint - ii.Point).Normalized();
 						Vector3 R = (toLight - 2 * Vector3.Dot(toLight.Normalized(), ii.Normal) * ii.Normal).Normalized();
 						color += new Vector3(1 / toLight.LengthSquared * ls.Color *
-						                     (ii.Object.Mat.DiffuseCo * Math.Max(0,
-							                      Vector3.Dot(ii.Normal, toLight.Normalized()))
-						                      + ii.Object.Mat.SpecularCo *
-						                      (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
+						                     (ii.Object.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized()))
+						                    + ii.Object.Mat.SpecularCo * (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
 						                     ));
 					}
 				}
@@ -66,7 +64,7 @@ namespace EpicRaytracer
 				}
 
 			iiiiiiiiiiiiiiiiiii = new IntersectionInfo(ray, t, o);
-			return o != null;
+			return o != null && t >= 0;
 		}
 	}
 	
@@ -158,8 +156,8 @@ namespace EpicRaytracer
 				{
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
-						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-							= Colors.Make(Scene.CalculatePixel(viewRay, Pos, 0));
+					Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
+						= Colors.Make(Scene.CalculatePixel(viewRay, 0));
 				}
 		}
 	}
@@ -170,57 +168,58 @@ namespace EpicRaytracer
 		{
 			try
 			{
-				float   scale        = 30;
-				float   numberOfRays = 20;
-				int     colorViewray = 0xff00ff;
-				int     colorSphere  = 0xffffff;
-				int     colorCam     = 0xffff00;
-				int     colorScreen  = 0xffffff;
-				Vector2 objectSize   = new Vector2(scale, scale / DisplayRegion.Width / DisplayRegion.Height);
+				float numberOfRays     = 20;
+				int   colorViewray     = 0xff00ff;
+				int   colorCam         = 0xffff00;
+				int   colorScreen      = 0xffffff;
+				int   colorSphere      = 0xffffff;
+				int   colorLightSource = 0x00ffff;
 
 				BasicCamera cam    = Raytracer.CurrentCam;
-				Point       camPos = To2D(cam.Pos);
+				Point       camPos = to2D(cam.Pos);
 				for (int i = 0; i < numberOfRays; i++)
 				{
-					float t   = 200 * scale; //always out of bounds
+					float t   = 20 * Raytracer.DebugScale; //always out of bounds
 					Ray   ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
 					if (Scene.TryIntersect(ray, out IntersectionInfo ii))
 						t = ii.t;
 
-					Point iPos = To2D(ray.GetPoint(t));
+					Point iPos = to2D(ray.GetPoint(t));
 					Raytracer.Display.Line(camPos.X, camPos.Y, iPos.X, iPos.Y, colorViewray);
 				}
 			
 				foreach (Object o in Scene.renderedObjects)
-				{
 					if (o is Sphere s)
-					{
-						for (float d = 0; d < 1; d += 1f/360)
-						{
-							Vector3 pos = s.Pos + new Vector3(
-								(float)(s.Radius * Math.Cos(d * 2 * Math.PI)), 0,
-								(float)(s.Radius * Math.Sin(d * 2 * Math.PI)));
-						
-							Draw(To2D(pos), colorSphere);
-						}
+						circle(s.Pos, s.Radius, colorSphere);
 
-					}
-				}
-
-				Point screenLeft  = To2D(cam.Lens.topLeft + cam.Pos);
-				Point screenRight = To2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
+				Point screenLeft  = to2D(cam.Lens.topLeft + cam.Pos);
+				Point screenRight = to2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
 				Raytracer.Display.Line(screenLeft.X, screenLeft.Y, screenRight.X, screenRight.Y, colorScreen);
 				
+				foreach (var ls in Scene.lightSources)
+					circle(ls.Pos, ls.Radius, colorLightSource);
 				Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
-				
-				Point To2D(Vector3 objectPos)
+
+				void circle(Vector3 point, float Radius, int c)
 				{
-					Point p = new Point((int)(objectPos.X / scale * DisplayRegion.Height),
-						-(int)(objectPos.Z / scale * DisplayRegion.Height));
+					for (float d = 0; d < 1; d += 1f/360)
+					{
+						Vector3 pos = point + new Vector3(
+							(float)(Radius * Math.Cos(d * 2 * Math.PI)), 0,
+							(float)(Radius * Math.Sin(d * 2 * Math.PI)));
+						
+						draw(to2D(pos), c);
+					}
+				}
+				
+				Point to2D(Vector3 objectPos)
+				{
+					Point p = new Point((int)(objectPos.X / Raytracer.DebugScale * DisplayRegion.Height),
+						-(int)(objectPos.Z / Raytracer.DebugScale * DisplayRegion.Height));
 					return p + new Size(DisplayRegion.Width/2 + DisplayRegion.Left, DisplayRegion.Height/2 + DisplayRegion.Top);
 				}
 
-				void Draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
+				void draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
 			}
 			catch (Exception e)
 			{
