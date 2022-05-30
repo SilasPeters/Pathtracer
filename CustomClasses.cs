@@ -220,19 +220,18 @@ namespace EpicRaytracer
 
 	public struct Material
 	{
-		public readonly bool IsMirror;
+		public readonly string Type;
 		public readonly Vector3 SpecularCo;
 		public readonly Vector3 DiffuseCo;
 		public readonly Vector3 AmbientCo;
-
-		/// <summary>Creates a mirror</summary>
-
-		/// <summary>Creates a nonmirror</summary>
-		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo, bool ismirror = false) {
-			SpecularCo = specularCo;
-			DiffuseCo  = diffuseCo;
-			AmbientCo  = ambientCo;
-			IsMirror = ismirror;
+		public readonly float N;
+		
+		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo, string type = "Normal", float n = 0) {
+			SpecularCo      = specularCo;
+			DiffuseCo       = diffuseCo;
+			AmbientCo       = ambientCo;
+			Type            = type;
+			N = n;
 		}
 	}
 }

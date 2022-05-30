@@ -18,36 +18,51 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 CalculatePixel(Ray viewRay, int layers, Object self = null)
+		public static Vector3 CalculatePixel(Ray viewRay, int layers, float n, Object self = null)
 		{
 			Vector3 color = Vector3.Zero;
-			if (TryIntersect(viewRay, out IntersectionInfo ii, self)) //we hit an object
+			if (TryIntersect(viewRay, out IntersectionInfo ii, self)) //we hit an object, but not the object from which ray comes
 			{
-				if (ii.Object.Mat.IsMirror)
-				{
-					if (layers >= 10) return Vector3.Zero;
-					
+				Material objMat = ii.Object.Mat;
+				if (layers >= 20) return Vector3.Zero; //end recursion
+				
+				if (ii.Object.Mat.Type == "Mirror") {
 					Vector3 V = ii.Point - ii.IntersectedRay.EntryPoint;
 					Vector3 R = V - 2 * Vector3.Dot(V.Normalized(), ii.Normal) * ii.Normal;
-					viewRay.SetDir(R);
 					viewRay.SetPoint(ii.Point);
-					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, ++layers, ii.Object);
+					viewRay.SetDir(R);
+					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, ++layers, n, ii.Object);
+				}
+
+				if (ii.Object.Mat.Type == "Refractive")
+				{
+					float nBreuk = n / objMat.N;
+					if (nBreuk > 1) return Vector3.Zero; //internal reflection
+					
+					Vector3  d      = viewRay.DirectionVect;
+					float    dot    = Vector3.Dot(d, ii.Normal);
+					Vector3  t = nBreuk * (d - dot * ii.Normal) - (float)Math.Sqrt(1 - nBreuk * nBreuk * (1 - dot * dot)) * ii.Normal;
+					
+					viewRay.SetPoint(ii.Point);
+					viewRay.SetDir(t);
+					return objMat.DiffuseCo * CalculatePixel(viewRay, ++layers, objMat.N, ii.Object);
 				}
 
 				foreach (LightSource ls in lightSources)
 				{
 					Vector3 toLight = ls.Pos - ii.Point;
-					if (!TryIntersect(new Ray(ii.Point, toLight.Normalized()), out IntersectionInfo iii, ii.Object)) //not lit
+					if (!TryIntersect(new Ray(ii.Point, toLight.Normalized()), out IntersectionInfo iii, ii.Object)) //lit
 					{
 						Vector3 V = (ii.IntersectedRay.EntryPoint - ii.Point).Normalized();
 						Vector3 R = (toLight - 2 * Vector3.Dot(toLight.Normalized(), ii.Normal) * ii.Normal).Normalized();
 						color += new Vector3(1 / toLight.LengthSquared * ls.Color *
-						                     (ii.Object.Mat.DiffuseCo * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized()))
-						                    + ii.Object.Mat.SpecularCo * (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
+						                     (objMat.DiffuseCo * Math.Max(0, Vector3.Dot(ii.Normal, toLight.Normalized()))
+						                    + objMat.SpecularCo * (float)Math.Pow(Math.Max(0, Vector3.Dot(V, R)), Raytracer.Glossyness)
 						                     ));
 					}
 				}
-				color += Raytracer.AmbientLightLevel * ii.Object.Mat.DiffuseCo;
+
+				color += Raytracer.AmbientLightLevel * objMat.DiffuseCo * objMat.AmbientCo;
 			}
 			return color;
 		}
@@ -157,7 +172,7 @@ namespace EpicRaytracer
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
 					Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-						= Colors.Make(Scene.CalculatePixel(viewRay, 0));
+						= Colors.Make(Scene.CalculatePixel(viewRay, 1, 0));
 				}
 		}
 	}
