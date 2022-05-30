@@ -19,9 +19,9 @@ namespace EpicRaytracer
 			this.DirectionVect = direction.Normalized();
 		}
 
-		public void SetDir(Vector3 dir) => DirectionVect = dir.Normalized();
-		public void SetPoint(Vector3 point) => EntryPoint = point;
-		public Vector3 GetPoint(float t)   => EntryPoint + t * DirectionVect;
+		public void    SetDir(Vector3 dir)     => DirectionVect = dir.Normalized();
+		public void    SetPoint(Vector3 point) => EntryPoint = point;
+		public Vector3 GetPoint(float t)       => EntryPoint + t * DirectionVect;
 	}
 	
 	public class LightSource

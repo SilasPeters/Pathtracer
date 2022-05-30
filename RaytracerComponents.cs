@@ -18,10 +18,10 @@ namespace EpicRaytracer
 		public static void AddObject(Object o) => renderedObjects.Add(o);
 		public static void AddLight(LightSource o) => lightSources.Add(o);
 
-		public static Vector3 CalculatePixel(Ray viewRay, int layers, float n, Object self = null)
+		public static Vector3 CalculatePixel(Ray ray, int layers, float n, Object self = null)
 		{
 			Vector3 color = Vector3.Zero;
-			if (TryIntersect(viewRay, out IntersectionInfo ii, self)) //we hit an object, but not the object from which ray comes
+			if (TryIntersect(ray, out IntersectionInfo ii, self)) //we hit an object, but not the object from which ray comes
 			{
 				Material objMat = ii.Object.Mat;
 				if (layers >= 20) return Vector3.Zero; //end recursion
@@ -29,9 +29,9 @@ namespace EpicRaytracer
 				if (ii.Object.Mat.Type == "Mirror") {
 					Vector3 V = ii.Point - ii.IntersectedRay.EntryPoint;
 					Vector3 R = V - 2 * Vector3.Dot(V.Normalized(), ii.Normal) * ii.Normal;
-					viewRay.SetPoint(ii.Point);
-					viewRay.SetDir(R);
-					return ii.Object.Mat.DiffuseCo * CalculatePixel(viewRay, ++layers, n, ii.Object);
+					ray.SetPoint(ii.Point);
+					ray.SetDir(R);
+					return objMat.DiffuseCo * CalculatePixel(ray, ++layers, n, ii.Object);
 				}
 
 				if (ii.Object.Mat.Type == "Refractive")
@@ -39,13 +39,13 @@ namespace EpicRaytracer
 					float nBreuk = n / objMat.N;
 					if (nBreuk > 1) return Vector3.Zero; //internal reflection
 					
-					Vector3  d      = viewRay.DirectionVect;
+					Vector3  d      = ray.DirectionVect;
 					float    dot    = Vector3.Dot(d, ii.Normal);
 					Vector3  t = nBreuk * (d - dot * ii.Normal) - (float)Math.Sqrt(1 - nBreuk * nBreuk * (1 - dot * dot)) * ii.Normal;
 					
-					viewRay.SetPoint(ii.Point);
-					viewRay.SetDir(t);
-					return objMat.DiffuseCo * CalculatePixel(viewRay, ++layers, objMat.N, ii.Object);
+					ray.SetPoint(ii.Point);
+					ray.SetDir(t);
+					return objMat.DiffuseCo * CalculatePixel(ray, ++layers, objMat.N, ii.Object);
 				}
 
 				foreach (LightSource ls in lightSources)
@@ -67,7 +67,92 @@ namespace EpicRaytracer
 			return color;
 		}
 
-		public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii, Object self = null)
+		public static Vector3 TracePixel(Ray ray, int depth, Object self = null)
+		{
+			/*if (depth >= 80)
+				return Vector3.Zero; // Bounced enough times.
+
+			if (TryIntersect(ray, out IntersectionInfo ii, self))
+			{
+				Material material  = ii.Object.Mat;
+				Vector3  emittance = material.DiffuseCo;
+
+				// Pick a random direction from here and keep going.
+				ray.SetPoint(ii.Point);
+				// This is NOT a cosine-weighted distribution!
+				ray.SetDir(RandomUnitVectorInHemisphereOf(ii.Normal));
+
+				// Probability of the newRay
+				float p = 1f / (float)(2 * Math.PI);
+
+				// Compute the BRDF for this ray (assuming Lambertian reflection)
+				float   cos_theta = Vector3.Dot(ray.DirectionVect, ii.Normal);
+				Vector3 BRDF      = material.SpecularCo / (float)Math.PI;
+
+				// Recursively trace reflected light sources.
+				Vector3 incoming = TracePixel(ray, depth + 1, ii.Object);
+
+				// Apply the Rendering Equation here.
+				return emittance + BRDF * incoming * cos_theta / p;	
+			}
+
+			return Vector3.Zero; // Nothing was hit.
+
+			Vector3 RandomUnitVectorInHemisphereOf(Vector3 Normal)
+			{
+				Random r = new Random();
+				return new Vector3(
+					Normal.X * r.Next(0, 20),
+					Normal.Y * r.Next(0, 20),
+					Normal.Z * r.Next(0, 20)
+				).Normalized();
+			}*/
+			
+			if (depth > 20) return Vector3.Zero; 
+			Vector2 N                  = ..., P                    = ...; //normal and position of the shaded point 
+			Vector3 directLightContrib = 0,   indirectLightContrib = 0; 
+			// compute direct illumination
+			foreach (var ls in lightSources)
+			{
+				Vector2 L   = ls.getLightDirection(P); 
+				Vector3 L_i = ls.intensity * scene->lights[i]->color; 
+				// we assume the surface at P is diffuse
+				directLightContrib += shadowRay(P, -L) * std::max(0.f, N.dotProduct(L)) * L_i;
+			}
+				// compute indirect illumination
+			float rotMat[2][2] =  {{N.y, -N.x}, {N.x, N.y}}; //compute a rotation matrix 
+			uint32_t N = 16;
+			for (uint32_t n = 0; n < N; ++n) {
+				// step 1: draw a random sample in the half-disk
+				float theta    = drand48() * M_PI; 
+				float cosTheta = cos(theta); 
+				float sinTheta = sin(theta); 
+				// step 2: rotate the sample direction
+				float sx = cosTheta  * rotMat[0][0] + sinTheta  * rotMat[0][1]; 
+				float sy = cosTheta  * rotMat[1][0] + sinTheta  * rotMat[1][1]; 
+				// step 3: cast the ray into the scene
+				Vec3f sampleColor = castRay(P, Vec2f(sx, sy), depth + 1); //trace a ray from P in random direction 
+				// step 4 and 5: treat the return color as if it was a light (we assume our shaded surface is diffuse)
+				IndirectLightContrib += sampleColor * cosTheta; //diffuse shading = L_i * cos(N.L) 
+			} 
+			// step 6: divide the result of indirectLightContrib by the number of samples N (Monte Carlo integration)
+			indirectLightContrib /= N; 
+ 
+			// final result is diffuse from direct and indirect lighting multiplied by the object color at P
+			return (indirectLightContrib + directLightContrib) * objectAlbedo / M_PI; 
+		}
+
+		/*void Render(Image finalImage, count numSamples) {
+			foreach (pixel in finalImage) {
+				foreach (i in numSamples) {
+					Ray r = camera.generateRay(pixel);
+					pixel.color += TracePath(r, 0);
+				}
+				pixel.color /= numSamples; // Average samples.
+			}
+		}*/
+
+			public static bool TryIntersect(Ray ray, out IntersectionInfo iiiiiiiiiiiiiiiiiii, Object self = null)
 		{
 			float  t = float.MaxValue;
 			Object o = null;
@@ -172,7 +257,7 @@ namespace EpicRaytracer
 					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
 													  (float)y / (DisplayRegion.Height - 1)));
 					Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-						= Colors.Make(Scene.CalculatePixel(viewRay, 1, 0));
+						= Colors.Make(Scene.TracePixel(viewRay, 0));
 				}
 		}
 	}
