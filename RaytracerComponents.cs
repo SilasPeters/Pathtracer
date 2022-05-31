@@ -234,7 +234,7 @@ namespace EpicRaytracer
 		
 		public abstract void RenderImage();
 
-		public void MoveForward(float amount)  => Pos += Front * amount;
+		public void MoveForward(float amount)   => Pos += Front * amount;
 		public void MoveSidewards(float amount) => Pos += Right * amount;
 
 		public void Pivot(float x, float y, float z)
