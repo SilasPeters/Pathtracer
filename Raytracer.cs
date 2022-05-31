@@ -7,6 +7,7 @@ namespace Template
 {
 	static class Raytracer
 	{
+		public const int Threads = 16;
 		public static Display Display;
 		public static Size DisplaySize = new Size(800, 400);
 		public const float DebugScale = 10f;

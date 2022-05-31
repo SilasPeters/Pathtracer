@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Template;
@@ -67,9 +67,9 @@ namespace EpicRaytracer
 			return color;
 		}
 
-		public static Vector3 TracePixel(Ray ray, int depth, Object self = null)
+		/*public static Vector3 TracePixel(Ray ray, int depth, Object self = null)
 		{
-			/*if (depth >= 80)
+			if (depth >= 80)
 				return Vector3.Zero; // Bounced enough times.
 
 			if (TryIntersect(ray, out IntersectionInfo ii, self))
@@ -108,7 +108,7 @@ namespace EpicRaytracer
 				).Normalized();
 			}*/
 			
-			if (depth > 20) return Vector3.Zero; 
+			/*if (depth > 20) return Vector3.Zero; 
 			Vector2 N                  = ..., P                    = ...; //normal and position of the shaded point 
 			Vector3 directLightContrib = 0,   indirectLightContrib = 0; 
 			// compute direct illumination
@@ -140,7 +140,7 @@ namespace EpicRaytracer
  
 			// final result is diffuse from direct and indirect lighting multiplied by the object color at P
 			return (indirectLightContrib + directLightContrib) * objectAlbedo / M_PI; 
-		}
+		}*/
 
 		/*void Render(Image finalImage, count numSamples) {
 			foreach (pixel in finalImage) {
@@ -249,16 +249,38 @@ namespace EpicRaytracer
 
 		public override void RenderImage()
 		{
-			Ray viewRay = new Ray(Pos, Vector3.Zero);
+			// Apply multithreading: start N that are sharing the workload
+			Thread[] threads = new Thread[Raytracer.Threads];
+			for (int i = 0; i < threads.Length; i++)
+			{
+				// each thread is assigned a subregion within the DisplayRegion of this camera which it will draw
+				int       subregionWidth = DisplayRegion.Width / Raytracer.Threads;
+				Rectangle subregion = new Rectangle(
+					DisplayRegion.Left + subregionWidth * i,
+					DisplayRegion.Top,
+					subregionWidth,
+					DisplayRegion.Height
+				);
+				threads[i] = new Thread(DrawSubregion);
+				threads[i].Start(subregion);
+			}
+			foreach (Thread thread in threads) thread.Join(); //Wait for all threads to be finished before continuing
+
+			// The actual drawing method
+			void DrawSubregion(object subregion)
+			{
+				Rectangle Subregion = (Rectangle)subregion;
+				Ray       viewRay   = new Ray(Pos, Vector3.Zero);
 			
-			for (int y = 0; y < DisplayRegion.Height; y++)
-				for (int x = 0; x < DisplayRegion.Width; x++)
-				{
-					viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
-													  (float)y / (DisplayRegion.Height - 1)));
-					Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-						= Colors.Make(Scene.TracePixel(viewRay, 0));
-				}
+				for (int y = 0; y < Subregion.Height; y++)
+					for (int x = Subregion.Left; x < Subregion.Right; x++)
+					{
+						viewRay.SetDir(Lens.GetDirToPixel((float)x / (DisplayRegion.Width - 1),
+							(float)y / (DisplayRegion.Height - 1)));
+						Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
+							= Colors.Make(Scene.CalculatePixel(viewRay, 0, 1));
+					}
+			}
 		}
 	}
 
