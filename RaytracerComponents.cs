@@ -27,7 +27,7 @@ namespace EpicRaytracer
             int bounces = 0;
             Object self = null;
 
-            while (bounces < 2)
+            while (bounces < 32)
             {
                 if (TryIntersect(ray, out IntersectionInfo ii, self)) //we hit an object, but not the object from which the ray comes
                 {
@@ -38,7 +38,7 @@ namespace EpicRaytracer
                     if (ii.Object.Mat.Type == "Mirror")
                     {
                         //calculate new reflected ray
-                        Vector3 V = ii.Point - ii.IntersectedRay.EntryPoint;
+                        Vector3 V = (ii.Point - ii.IntersectedRay.EntryPoint).Normalized();
                         Vector3 R = V - 2 * Vector3.Dot(V.Normalized(), ii.Normal) * ii.Normal;
                         ray.SetPoint(ii.Point);
                         ray.SetDir(R);
@@ -53,9 +53,10 @@ namespace EpicRaytracer
                         Vector3 d = ray.DirectionVect;
                         float dot = Vector3.Dot(d, ii.Normal);
                         Vector3 t = nBreuk * (d - dot * ii.Normal) - (float)Math.Sqrt(1 - nBreuk * nBreuk * (1 - dot * dot)) * ii.Normal;
-
+                        
                         ray.SetPoint(ii.Point);
                         ray.SetDir(t);
+                        if (self.Mat.Type == "Refractive") self = null;
                     }
                     else if (ii.Object.Mat.Type == "Emmissive")
                     {
@@ -213,6 +214,7 @@ namespace EpicRaytracer
         Vector3 previousPos;
         Vector3 previousDirection;
         float previousLensDistance;
+        Vector3 previousRotation;
 
         public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
             : base(pos, front, up, displayRegion, FOV)
@@ -221,11 +223,12 @@ namespace EpicRaytracer
 
         public override void RenderImage()
         {
-            if (Pos != previousPos || Front != previousDirection || Lens.Distance != previousLensDistance)
+            if (Pos != previousPos || Front != previousDirection || Lens.Distance != previousLensDistance || Rotation != previousRotation)
             {
                 previousPos = Pos;
                 previousDirection = Front;
                 previousLensDistance = Lens.Distance;
+                previousRotation = Rotation;
                 totals = new Vector3[Raytracer.Display.pixels.Length];
                 Ticks = 0;
             }
