@@ -61,27 +61,6 @@ namespace EpicRaytracer
 		
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			/*float a = Vector3.Dot(ray.DirectionVect, ray.DirectionVect); //== length^2
-					//d.X*d.X + d.Y*d.Y + d.Z*d.Z;
-			float b = 2 * Vector3.Dot(ray.DirectionVect, ray.EntryPoint - Pos);
-					//2 * (d.X * (e.X - p.X) + d.Y * (e.Y - p.Y) + d.Z * (e.Z - p.Z));
-			float c = Vector3.Dot(ray.EntryPoint, ray.EntryPoint - 2 * Pos) + Vector3.Dot(Pos, Pos) - Radius*Radius;
-					//e.X * (e.X - 2 * p.X) + p.X*p.X + e.Y * (e.Y - 2 * p.Y) + p.Y*p.Y + e.Z * (e.Z - 2 * p.Z) + p.Z*p.Z - Radius*Radius;
-			float dis = b*b - 4 * a * c;
-
-			if (dis >= 0)
-			{
-				float t = dis > 0
-					? (float)(-b - Math.Sqrt(dis)) / (2 * a)
-					: -b / (2 * a);
-
-				ii = new IntersectionInfo(ray, t, this);
-				return t > 0;
-			}
-			//else
-			ii = IntersectionInfo.None;
-			return false;*/
-
 			// source: lecture notes
 			Vector3 c  = Pos - ray.EntryPoint;
 			float   t  = Vector3.Dot(c, ray.DirectionVect);
@@ -129,45 +108,9 @@ namespace EpicRaytracer
 				ii = IntersectionInfo.None;
 				return false;
 			}
-
-			/*// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
-			float denom = Vector3.Dot(ray.DirectionVect, Normal);
-			if (denom > 1e-6)
-			{
-				Vector3 p0l0 = Pos - ray.EntryPoint;
-				float t = Vector3.Dot(p0l0, Normal) / denom;
-				ii = new IntersectionInfo(ray, t, this);
-				return t >= 0;
-			}
-
-			ii = IntersectionInfo.None;
-			return false;*/
 		}
 
 		public override Vector3 GetNormalAt(Vector3 pointOnObject) => Normal;
-	}
-	public class Quad : Plane
-	{
-		public Vector3 Min { get; protected set;} //todo: Shouldn't we ask for vertexes? Otherwise a quad is always square
-		public Vector3 Max { get; protected set;}
-		public Quad(Vector3 pos, Vector3 normal, Vector3 min, Vector3 max, Material material) : base(pos, normal, material) {
-			this.Min = min;
-			this.Max = max;
-		}
-		
-		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
-		{
-			if(base.TryIntersect(ray, out ii))
-			{
-				if((ii.Point - Pos).LengthSquared <= 1 * 1)
-				{
-					//Console.WriteLine(t);
-					return true;
-				}
-			}
-			ii = IntersectionInfo.None;
-			return false;
-		}
 	}
 	#endregion Objects
 	

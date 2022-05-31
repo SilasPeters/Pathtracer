@@ -31,7 +31,6 @@ namespace EpicRaytracer
             {
                 if (TryIntersect(ray, out IntersectionInfo ii, self)) //we hit an object, but not the object from which the ray comes
                 {
-                    //return Vector3.One * ii.Normal;
                     Material objMat = ii.Object.Mat;
                     self = ii.Object;
 
@@ -83,6 +82,7 @@ namespace EpicRaytracer
         }
         static Vector3 SampleHemisphereCosine(Vector3 normal, float r0, float r1)   
         {
+            // take random point in hemisphere around point
             float r = (float)Math.Sqrt(r0);
             float theta = (float)(2.0f * Math.PI * r1);
             float x = (float)(r * Math.Cos(theta));

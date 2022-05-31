@@ -25,18 +25,19 @@ namespace Template
 
 		public static void Init()
 		{
-			Material m11 = new Material(new Vector3(1, 0.5f, 0.5f),           Vector3.One / 2, Vector3.One/2);
-			Material m12 = new Material(new Vector3(80, 189, 58) / 255, Vector3.One / 2, Vector3.One / 2);
-			Material m13 = new Material(new Vector3(1, 1, 1),			Vector3.One / 2, Vector3.One / 2, 1, "Emmissive");
-			Material mir = new Material(new Vector3(1, 1, 1),           Vector3.One / 2, Vector3.One, 2, "Mirror");
+			Material redish = new Material(new Vector3(1, 0.5f, 0.5f),           Vector3.One / 2, Vector3.One/2);
+			Material greenish = new Material(new Vector3(80, 189, 58) / 255, Vector3.One / 2, Vector3.One / 2);
+			Material whiteLight = new Material(new Vector3(1, 1, 1),			Vector3.One / 2, Vector3.One / 2, 3, "Emmissive");
+			Material mirror = new Material(new Vector3(1, 1, 1),           Vector3.One / 2, Vector3.One, 2, "Mirror");
 			Material refr = new Material(new Vector3(1, 1, 1),           Vector3.One / 2, Vector3.One, 1, "Refractive");
 
-			Scene.AddObject(new Sphere(new Vector3(0, 0.5f, 0), 1f,   m12));
-			Scene.AddObject(new Sphere(new Vector3(2, 2f,   0), 1.3f, m11));
-			Scene.AddObject(new Sphere(new Vector3(-1, 3f,  0), 1.5f, mir));
-			Scene.AddObject(new Sphere(new Vector3(-1, 2f,  2), 1.5f, m13));
+			Scene.AddObject(new Sphere(new Vector3(0, 0.5f, 0), 1f,   greenish));
+			Scene.AddObject(new Sphere(new Vector3(-1, 2f,   0), .3f, redish));
+			Scene.AddObject(new Sphere(new Vector3(2, 2f,   0), 1.3f, redish));
+			Scene.AddObject(new Sphere(new Vector3(-1, 3f,  0), 1.5f, mirror));
+			Scene.AddObject(new Sphere(new Vector3(-1, 2f,  2), 1.5f, whiteLight));
 			Scene.AddObject(new Sphere(new Vector3(0.5f, 0.5f,  -1), 0.3f, refr));
-			Scene.AddObject(new Plane(new Vector3(0,  -1,  0), new Vector3(0, 1, 0), m12));
+			Scene.AddObject(new Plane(new Vector3(0,  -1,  0), new Vector3(0, 1, 0), greenish));
 
 			_cameraStances = new []
 			{
