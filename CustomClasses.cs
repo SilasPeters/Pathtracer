@@ -118,7 +118,7 @@ namespace EpicRaytracer
 
 			if (bot != 0)
 			{
-				float t = (Vector3.Dot(Normal, ray.EntryPoint) + d)/bot;
+				float t = -(Vector3.Dot(Normal, ray.EntryPoint) - d)/bot;
 
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
 				ii = new IntersectionInfo(ray, t, this);
@@ -130,7 +130,7 @@ namespace EpicRaytracer
 				return false;
 			}
 
-			/// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
+			/*// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
 			float denom = Vector3.Dot(ray.DirectionVect, Normal);
 			if (denom > 1e-6)
 			{
@@ -219,14 +219,16 @@ namespace EpicRaytracer
 		public readonly Vector3 SpecularCo;
 		public readonly Vector3 DiffuseCo;
 		public readonly Vector3 AmbientCo;
+		public readonly float Emmisiveness;
 		public readonly float N;
 		
-		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo, string type = "Normal", float n = 0) {
+		public Material(Vector3 diffuseCo, Vector3 specularCo, Vector3 ambientCo, float emmisiveness = 1, string type = "Normal", float n = 0) {
 			SpecularCo      = specularCo;
 			DiffuseCo       = diffuseCo;
 			AmbientCo       = ambientCo;
 			Type            = type;
 			N = n;
+			Emmisiveness = emmisiveness;
 		}
 	}
 }

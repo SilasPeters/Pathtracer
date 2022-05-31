@@ -27,7 +27,7 @@ namespace EpicRaytracer
             int bounces = 0;
             Object self = null;
 
-            while (bounces < 16)
+            while (bounces < 2)
             {
                 if (TryIntersect(ray, out IntersectionInfo ii, self)) //we hit an object, but not the object from which the ray comes
                 {
@@ -59,26 +59,28 @@ namespace EpicRaytracer
                     }
                     else if (ii.Object.Mat.Type == "Emmissive")
                     {
-                        color += mask * ii.Object.Mat.DiffuseCo;
+                        color += mask * ii.Object.Mat.DiffuseCo * ii.Object.Mat.Emmisiveness;
+                        break;
                     }
                     // if not some special object type, determine for each light source how much this surface is lit
                     else
                     {
-                        Ray randRay = new Ray(ii.Point, SampleHemisphereCosine(ii.Normal, (float)r.NextDouble(), (float)r.NextDouble()));
+                        ray.SetPoint(ii.Point);
+                        ray.SetDir(SampleHemisphereCosine(ii.Normal, (float)r.NextDouble(), (float)r.NextDouble()));
+                        if (r.NextDouble() == r.NextDouble()) r = new Random();
                         mask *= ii.Object.Mat.DiffuseCo;
                     }
                 }
                 else
                 {
-                    color += mask * Vector3.One;//sky times mask
-                    if (mask != Vector3.One) ;
+                    color += mask * Vector3.One/3;//sky times mask
                     break;
                 }
                 bounces++;
             }
             return color;
         }
-        static Vector3 SampleHemisphereCosine(Vector3 normal, float r0, float r1)
+        static Vector3 SampleHemisphereCosine(Vector3 normal, float r0, float r1)   
         {
             float r = (float)Math.Sqrt(r0);
             float theta = (float)(2.0f * Math.PI * r1);
@@ -95,90 +97,7 @@ namespace EpicRaytracer
                     Vector3.Dot(s, new Vector3(u.Y, v.Y, w.Y)),
                     Vector3.Dot(s, new Vector3(u.Z, v.Z, w.Z)))).Normalized();
         }
-        /*public static Vector3 TracePixel(Ray ray, int depth, Object self = null)
-		{
-			if (depth >= 80)
-				return Vector3.Zero; // Bounced enough times.
-
-			if (TryIntersect(ray, out IntersectionInfo ii, self))
-			{
-				Material material  = ii.Object.Mat;
-				Vector3  emittance = material.DiffuseCo;
-
-				// Pick a random direction from here and keep going.
-				ray.SetPoint(ii.Point);
-				// This is NOT a cosine-weighted distribution!
-				ray.SetDir(RandomUnitVectorInHemisphereOf(ii.Normal));
-
-				// Probability of the newRay
-				float p = 1f / (float)(2 * Math.PI);
-
-				// Compute the BRDF for this ray (assuming Lambertian reflection)
-				float   cos_theta = Vector3.Dot(ray.DirectionVect, ii.Normal);
-				Vector3 BRDF      = material.SpecularCo / (float)Math.PI;
-
-				// Recursively trace reflected light sources.
-				Vector3 incoming = TracePixel(ray, depth + 1, ii.Object);
-
-				// Apply the Rendering Equation here.
-				return emittance + BRDF * incoming * cos_theta / p;	
-			}
-
-			return Vector3.Zero; // Nothing was hit.
-
-			Vector3 RandomUnitVectorInHemisphereOf(Vector3 Normal)
-			{
-				Random r = new Random();
-				return new Vector3(
-					Normal.X * r.Next(0, 20),
-					Normal.Y * r.Next(0, 20),
-					Normal.Z * r.Next(0, 20)
-				).Normalized();
-			}*/
-
-        /*if (depth > 20) return Vector3.Zero; 
-		Vector2 N                  = ..., P                    = ...; //normal and position of the shaded point 
-		Vector3 directLightContrib = 0,   indirectLightContrib = 0; 
-		// compute direct illumination
-		foreach (var ls in lightSources)
-		{
-			Vector2 L   = ls.getLightDirection(P); 
-			Vector3 L_i = ls.intensity * scene->lights[i]->color; 
-			// we assume the surface at P is diffuse
-			directLightContrib += shadowRay(P, -L) * std::max(0.f, N.dotProduct(L)) * L_i;
-		}
-			// compute indirect illumination
-		float rotMat[2][2] =  {{N.y, -N.x}, {N.x, N.y}}; //compute a rotation matrix 
-		uint32_t N = 16;
-		for (uint32_t n = 0; n < N; ++n) {
-			// step 1: draw a random sample in the half-disk
-			float theta    = drand48() * M_PI; 
-			float cosTheta = cos(theta); 
-			float sinTheta = sin(theta); 
-			// step 2: rotate the sample direction
-			float sx = cosTheta  * rotMat[0][0] + sinTheta  * rotMat[0][1]; 
-			float sy = cosTheta  * rotMat[1][0] + sinTheta  * rotMat[1][1]; 
-			// step 3: cast the ray into the scene
-			Vec3f sampleColor = castRay(P, Vec2f(sx, sy), depth + 1); //trace a ray from P in random direction 
-			// step 4 and 5: treat the return color as if it was a light (we assume our shaded surface is diffuse)
-			IndirectLightContrib += sampleColor * cosTheta; //diffuse shading = L_i * cos(N.L) 
-		} 
-		// step 6: divide the result of indirectLightContrib by the number of samples N (Monte Carlo integration)
-		indirectLightContrib /= N; 
-
-		// final result is diffuse from direct and indirect lighting multiplied by the object color at P
-		return (indirectLightContrib + directLightContrib) * objectAlbedo / M_PI; 
-	}*/
-
-        /*void Render(Image finalImage, count numSamples) {
-			foreach (pixel in finalImage) {
-				foreach (i in numSamples) {
-					Ray r = camera.generateRay(pixel);
-					pixel.color += TracePath(r, 0);
-				}
-				pixel.color /= numSamples; // Average samples.
-			}
-		}*/
+        
 
         /// <summary>Returns true if an object intersects with a given ray. If so, the out parameter supplies you with all the info you need</summary>
         /// <param name="ray">The ray which is tested for intersections</param>
@@ -289,6 +208,12 @@ namespace EpicRaytracer
     }
     public class MainCamera : BasicCamera
     {
+        private Vector3[] totals = new Vector3[Raytracer.Display.pixels.Length];
+        private int Ticks;
+        Vector3 previousPos;
+        Vector3 previousDirection;
+        float previousLensDistance;
+
         public MainCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
             : base(pos, front, up, displayRegion, FOV)
         {
@@ -296,6 +221,16 @@ namespace EpicRaytracer
 
         public override void RenderImage()
         {
+            if (Pos != previousPos || Front != previousDirection || Lens.Distance != previousLensDistance)
+            {
+                previousPos = Pos;
+                previousDirection = Front;
+                previousLensDistance = Lens.Distance;
+                totals = new Vector3[Raytracer.Display.pixels.Length];
+                Ticks = 0;
+            }
+            Ticks++;
+
             // Apply multithreading: start N that are sharing the workload
             Thread[] threads = new Thread[Raytracer.Threads];
             for (int i = 0; i < threads.Length; i++)
@@ -326,9 +261,10 @@ namespace EpicRaytracer
                         viewRay.SetDir(Lens.GetDirToPixel(
                             (float)x / (DisplayRegion.Width - 1),
                             (float)y / (DisplayRegion.Height - 1)));
-                        // for each pixel, shoot the ray and store the returned color
-                        Raytracer.Display.pixels[DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width]
-                            = Colors.Make(Scene.CalculatePixel(viewRay, 0, 1));
+
+                        int pixelIndex = DisplayRegion.Left + x + (DisplayRegion.Top + y) * Raytracer.Display.width;
+                        totals[pixelIndex] += Scene.CalculatePixel(viewRay, 0, 1);
+                        Raytracer.Display.pixels[pixelIndex] = Colors.Make(totals[pixelIndex] / Ticks);
                     }
             }
         }

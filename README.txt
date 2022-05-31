@@ -1,5 +1,5 @@
 Made by:
-Jack Rosenberg and Silas Peters (both Honours students)
+Jack Rosenberg (8287775) and Silas Peters (4419197) (both Honours students)
 
 Camera:
 	- Each camera is setup with a Front, Up and calculated Right vector, along with other
@@ -66,7 +66,10 @@ Extra assignments:
     - Refraction: an object can be fully refractive when its type is set to "Refractive".
     
 Honours assignment:
-
+    - We would like to mention that we discovered that Random.NextDouble() can run out of new values
+      after enough values have been generated. Thus, our pathtracer which is dependend on random values
+      stops working after a second or so. This took us a long time to discover and thus impacted our final
+      result. We hope that that can be taken into consideration.
 
 Sources and materials used: (when code is used, it will be mentioned in the sourceode)
     - OpenTK 3.x (as per template)
