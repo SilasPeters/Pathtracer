@@ -27,14 +27,14 @@ namespace Template
 		{
 			Material m11 = new Material(new Vector3(0, 1, 0),           Vector3.One / 2, Vector3.One/2);
 			Material m12 = new Material(new Vector3(80, 189, 58) / 255, Vector3.One / 2, Vector3.One / 2);
-			Material mir = new Material(new Vector3(1, 1, 1),           Vector3.One / 2, Vector3.One, "Refractive", 1);
+			Material mir = new Material(new Vector3(1, 1, 1),           Vector3.One / 2, Vector3.One, "Mirror");
 
 			Scene.AddObject(new Sphere(new Vector3(0, 0.5f, 0), 1f,   mir));
 			Scene.AddObject(new Sphere(new Vector3(2, 2f,   0), 1.3f, m11));
-			
-			Scene.AddObject(new Plane(new Vector3(0,  -1f,  0), new Vector3(0, -1, 0), m12));
 
-			Scene.AddLight(new LightSource(new Vector3(-3,  2, 0f), new Vector3(1, 1, 1), 1));
+			Scene.AddObject(new Plane(new Vector3(0, -1f, 0), new Vector3(0, -1, 0), m12));
+
+			Scene.AddLight(new LightSource(new Vector3(-3,  2, 0f), new Vector3(1, 1, 1)));
 			//Scene.AddLight(new LightSource(new Vector3(-2, 1, 0f), new Vector3(1, 1, 0.4f), 1));
 
 			_cameraStances = new []

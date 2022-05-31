@@ -31,7 +31,7 @@ namespace EpicRaytracer
 		public Vector3 Color  { get; }
 
 		/// <param name="radius">Only used for the debugcam</param>
-		public LightSource(Vector3 pos, Vector3 color, float freq, float radius = 0.2f) {	
+		public LightSource(Vector3 pos, Vector3 color, float radius = 0.2f) {	
 			this.Pos    = pos;
 			this.Color  = color * 30; //todo
 			this.Radius = radius;
@@ -82,6 +82,7 @@ namespace EpicRaytracer
 			ii = IntersectionInfo.None;
 			return false;*/
 
+			// source: lecture notes
 			Vector3 c  = Pos - ray.EntryPoint;
 			float   t  = Vector3.Dot(c, ray.DirectionVect);
 			Vector3 q  = c - t * ray.DirectionVect;
@@ -120,7 +121,7 @@ namespace EpicRaytracer
 				float t = (Vector3.Dot(Normal, ray.EntryPoint) + d)/bot;
 
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				ii = new IntersectionInfo(intPoint, Normal);
+				ii = new IntersectionInfo(ray, t, this);
 				return true;
 			}
 			else
@@ -129,7 +130,7 @@ namespace EpicRaytracer
 				return false;
 			}*/
 
-			// assuming vectors are all normalized
+			/// Source: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-plane-and-ray-disk-intersection
 			float denom = Vector3.Dot(ray.DirectionVect, Normal);
 			if (denom > 1e-6)
 			{
