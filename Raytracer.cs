@@ -35,7 +35,7 @@ namespace Template
 			
 			Scene.AddObject(new Plane(new Vector3(0,  -1f,  0), new Vector3(0, 1, 0), m12));
 
-			Scene.AddLight(new LightSource(new Vector3(-3,  2, 0f), new Vector3(1, 1, 1), 1));
+			Scene.AddLight(new LightSource(new Vector3(-3,  2, 0f), new Vector3(1, 1, 1)));
 			//Scene.AddLight(new LightSource(new Vector3(-2, 1, 0f), new Vector3(1, 1, 0.4f), 1));
 
 			_cameraStances = new []

@@ -233,15 +233,15 @@ namespace EpicRaytracer
         public Vector3 GetDirToPixel(float xPercentage, float yPercentage) => topLeft + horizontal * xPercentage - vertical * yPercentage;
     }
 
-    public abstract class BasicCamera
-    {
-        public Vector3 Pos { get; protected set; }
-        public Vector3 Front { get; protected set; }
-        public Vector3 Up { get; protected set; }
-        public Vector3 Right { get; protected set; }
-        public Rectangle DisplayRegion { get; protected set; }
-        public Lens Lens;
-        public Vector3 Rotation { get; protected set; }
+	public abstract class BasicCamera
+	{
+		public Vector3   Pos           { get; protected set; }
+		public Vector3   Front         { get; protected set; }
+		public Vector3   Up            { get; protected set; }
+		public Vector3   Right         { get; protected set; }
+		public Rectangle DisplayRegion { get; protected set; }
+		public Lens		 Lens;
+		public Vector3   Rotation      { get; protected set; }
 
         public BasicCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
         {
@@ -334,32 +334,31 @@ namespace EpicRaytracer
         }
     }
 
-    public class DebugCamera : BasicCamera
-    {
-        public override void RenderImage()
-        {
-            // Yes, this is a try catch. A rare scenario in which it's actually a neat solution in my opinion
-            try
-            {
-                float numberOfRays = 20;
-                int colorViewray = 0xff00ff;
-                int colorCam = 0xffff00;
-                int colorLens = 0xffffff;
-                int colorSphere = 0xffffff;
-                int colorLightSource = 0x00ffff;
-
-                BasicCamera cam = Raytracer.CurrentCam;
-                Point camPos = to2D(cam.Pos);
-
-                // Draw each viewray
-                for (int i = 0; i < numberOfRays; i++)
-                {
-                    float t = 20 * Raytracer.DebugScale; //default valye will always be out of bounds
-                                                         // Calculate intersection point by shooting a new viewray, and see at what distance with this
-                                                         // given direction an intersection occurs
-                    Ray ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
-                    if (Scene.TryIntersect(ray, out IntersectionInfo ii)) //hit something
-                        t = ii.t; //overwrites default value
+	public class DebugCamera : BasicCamera
+	{
+		public override void RenderImage()
+		{
+			try
+			{
+				float numberOfRays     = 20;
+				int   colorViewray     = 0xff00ff;
+				int   colorCam         = 0xffff00;
+				int   colorLens      = 0xffffff;
+				int   colorSphere      = 0xffffff;
+				int   colorLightSource = 0x00ffff;
+				
+				BasicCamera cam    = Raytracer.CurrentCam;
+				Point       camPos = to2D(cam.Pos);
+				
+				// Draw each viewray
+				for (int i = 0; i < numberOfRays; i++)
+				{
+					float t   = 20 * Raytracer.DebugScale; //default valye will always be out of bounds
+					// Calculate intersection point by shooting a new viewray, and see at what distance with this
+					// given direction an intersection occurs
+					Ray   ray = new Ray(cam.Pos, cam.Lens.GetDirToPixel(i / (numberOfRays - 1), 0.5f));
+					if (Scene.TryIntersect(ray, out IntersectionInfo ii)) //hit something
+						t = ii.t; //overwrites default value
 
                     // Draw the line for a length which might be default, might be shorter
                     Point iPos = to2D(ray.GetPoint(t));
@@ -371,16 +370,17 @@ namespace EpicRaytracer
                     if (o is Sphere s)
                         circle(s.Pos, s.Radius, colorSphere);
 
-                // Draw the lens through which lines are shot
-                Point lensLeft = to2D(cam.Lens.topLeft + cam.Pos);
-                Point lensRight = to2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
-                Raytracer.Display.Line(lensLeft.X, lensLeft.Y, lensRight.X, lensRight.Y, colorLens);
-
-                // Draw all lightsources
-                foreach (var ls in Scene.lightSources)
-                    circle(ls.Pos, ls.Radius, colorLightSource);
-                // Draw the camera
-                Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
+				// Draw the lens through which lines are shot
+				Point lensLeft  = to2D(cam.Lens.topLeft + cam.Pos);
+				Point lensRight = to2D(cam.Lens.topLeft + cam.Lens.horizontal + cam.Pos);
+				Raytracer.Display.Line(lensLeft.X, lensLeft.Y, lensRight.X, lensRight.Y, colorLens);
+				
+				// Draw all lightsources
+				foreach (var ls in Scene.lightSources)
+					circle(ls.Pos, ls.Radius, colorLightSource);
+				
+				// Draw the first maincamera
+				Raytracer.Display.Box(camPos.X - 1, camPos.Y - 1, camPos.X, camPos.Y, colorCam);
 
                 //draws a circle
                 void circle(Vector3 point, float Radius, int c)
@@ -403,20 +403,20 @@ namespace EpicRaytracer
                     return p + new Size(DisplayRegion.Width / 2 + DisplayRegion.Left, DisplayRegion.Height / 2 + DisplayRegion.Top);
                 }
 
-                void draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
-            }
-            catch (Exception e)
-            {
-                // In the try block above, all objects are rendered in order of importance to be displayed.
-                // If an object is to be displayed outside of the given region of the Debug Camera, the would be
-                // an IndexOutOfRangeException. This may occur when the camera or an object is outside the window.
-                // The window can be scaled by changing the scale value Raytracer.DebugScale, so that more can be
-                // displayed. Still, there shouldn't be a crash. Thus, the rendering just stops after an exception.
-                // Due to the ordered rendering, the objects actually inside the window are still displayed but the
-                // ones outside not. Thus, the exception is no big deal (most of the time)!
-                Console.WriteLine("Attempted to draw an object outside of the display.\nIncrease the scale of the Debug Cam to fix missing objects");
-            }
-        }
+				void draw(Point pos, int c) => Raytracer.Display.pixels[pos.X + pos.Y * Raytracer.Display.width] = c;
+			}
+			catch (Exception)
+			{
+				// In the try block above, all objects are rendered in order of importance to be displayed.
+				// If an object is to be displayed outside of the given region of the Debug Camera, the would be
+				// an IndexOutOfRangeException. This may occur when the camera or an object is outside the window.
+				// The window can be scaled by changing the scale value Raytracer.DebugScale, so that more can be
+				// displayed. Still, there shouldn't be a crash. Thus, the rendering just stops after an exception.
+				// Due to the ordered rendering, the objects actually inside the window are still displayed but the
+				// ones outside not. Thus, the exception is no big deal (most of the time)!
+				Console.WriteLine("Attempted to draw an object outside of the display.\nIncrease the scale of the Debug Cam to fix missing objects");
+			}
+		}
 
         public DebugCamera(Vector3 pos, Vector3 front, Vector3 up, Rectangle displayRegion, float FOV)
             : base(pos, front, up, displayRegion, FOV)
