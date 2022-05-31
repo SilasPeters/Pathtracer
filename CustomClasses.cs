@@ -97,7 +97,7 @@ namespace EpicRaytracer
 			return true;
 		}
 
-		public override Vector3 GetNormalAt(Vector3 pointOnObject) => (pointOnObject - Pos) / Radius; //accurate enough for normalization
+		public override Vector3 GetNormalAt(Vector3 pointOnObject) => ((pointOnObject - Pos) / Radius).Normalized(); //accurate enough for normalization
 
 		public bool Contains(Vector3 point) => (point.X - Pos.X) * (point.X - Pos.X) + (point.Y - Pos.Y) * (point.Y - Pos.Y) + (point.Z - Pos.Z) * (point.Z - Pos.Z) <= Radius * Radius; //:)
 	}
@@ -112,7 +112,7 @@ namespace EpicRaytracer
 
 		public override bool TryIntersect(Ray ray, out IntersectionInfo ii)
 		{
-			/*float d = -Vector3.Dot(Normal, Pos);
+			float d = Vector3.Dot(Normal, Pos);
 			float bot = Vector3.Dot(Normal, ray.DirectionVect);
 
 			if (bot != 0)
@@ -120,17 +120,17 @@ namespace EpicRaytracer
 				float t = (Vector3.Dot(Normal, ray.EntryPoint) + d)/bot;
 
 				Vector3 intPoint = ray.EntryPoint + ray.DirectionVect * t;
-				ii = new IntersectionInfo(intPoint, Normal);
+				ii = new IntersectionInfo(ray, t, this);
 				return true;
 			}
 			else
 			{
 				ii = IntersectionInfo.None;
 				return false;
-			}*/
+			}
 
 			// assuming vectors are all normalized
-			float denom = Vector3.Dot(ray.DirectionVect, Normal);
+			/*float denom = Vector3.Dot(ray.DirectionVect, Normal);
 			if (denom > 1e-6)
 			{
 				Vector3 p0l0 = Pos - ray.EntryPoint;
@@ -140,7 +140,7 @@ namespace EpicRaytracer
 			}
 
 			ii = IntersectionInfo.None;
-			return false;
+			return false;*/
 		}
 
 		public override Vector3 GetNormalAt(Vector3 pointOnObject) => Normal;
@@ -174,9 +174,10 @@ namespace EpicRaytracer
 	{
 		public static int Make(byte r, byte g, byte b) => (r << 16) | (g << 8) | b;
 		public static int Make(Vector3 vec) {
-			return Make((byte)(Math.Min(vec.X, 1) * 255), //todo: assume (safely...) that the values won't clip beyond 1
-						(byte)(Math.Min(vec.Y, 1) * 255),
-						(byte)(Math.Min(vec.Z, 1) * 255));
+			Vector3 v = Vector3.Clamp(vec, Vector3.Zero, Vector3.One);
+			return Make((byte)(v.X * 255), //todo: assume (safely...) that the values won't clip beyond 1
+						(byte)(v.Y * 255),
+						(byte)(v.Z * 255));
 		}
 
 		public static Vector3 GetVector(int c) => new Vector3(GetR(c), GetB(c), GetB(c));
