@@ -53,8 +53,6 @@ namespace EpicRaytracer
 
 		public abstract bool    TryIntersect(Ray ray, out IntersectionInfo ii);
 		public abstract Vector3 GetNormalAt(Vector3 pointOnObject);
-		
-		//todo: normal vector is always to the outside [REFRACTION] - wat bedoelden we hier mee? Wanneer was dit van toepassing?
 	}
 	public class Sphere : Object
 	{
@@ -184,7 +182,7 @@ namespace EpicRaytracer
 		}
 
 		public static Vector3 GetVector(int c) => new Vector3(GetR(c), GetB(c), GetB(c));
-		public static byte[]  SplitRGB(int c)  => new byte[] { GetR(c), GetG(c), GetB(c) };
+		public static byte[]  SplitRGB(int c)  => new byte[]{ GetR(c), GetG(c), GetB(c) };
 		public static byte    GetR(int color)  => (byte)(color >> 16);
 		public static byte    GetG(int color)  => (byte)(color >> 8 );
 		public static byte    GetB(int color)  => (byte)(color      );
@@ -195,11 +193,11 @@ namespace EpicRaytracer
 								  //type, values might change in deeper recursion levels affecting all levels as a result.)
 								  //Yet, all items are readonly anyway so this is pratically a struct.
 	{
-		public Ray IntersectedRay { get; }
-		public Object  Object { get; }
-		public Vector3 Point  { get; }
-		public Vector3 Normal { get; }
-		public float   t      { get; }
+		public Ray     IntersectedRay { get; }
+		public Object  Object         { get; }
+		public Vector3 Point          { get; }
+		public Vector3 Normal         { get; }
+		public float   t              { get; }
 
 		public const IntersectionInfo None = null;
 
@@ -213,9 +211,6 @@ namespace EpicRaytracer
 			if(obj != null)
 				this.Normal         = obj.GetNormalAt(Point);
 		}
-
-		
-		public override string ToString() => $"IntPoint: {Point}, Normal: {Normal}";
 	}
 
 	public struct Material

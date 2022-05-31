@@ -7,9 +7,10 @@ namespace Template
 {
 	static class Raytracer
 	{
-		public const int Threads = 16;
 		public static Display Display;
 		public static Size DisplaySize = new Size(800, 400);
+		
+		public const int Threads = 16;
 		public const float DebugScale = 10f;
 		public const float Epsilon = 0.001f;
 		public const float Glossyness = 50;
@@ -54,9 +55,9 @@ namespace Template
 			Display.Clear(0);
 			HandleUserInput();
 
-			foreach (var cam in _cameraStances[_currentCamStance]) {
+			// By pressing spacebar you can cycle through camera stances.
+			foreach (var cam in _cameraStances[_currentCamStance])
 				cam.RenderImage();
-			}
 			Display.Print(_currentCamStance.ToString(), 5, 5, 0xffffff);
 		}
 
