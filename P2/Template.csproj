@@ -70,5 +70,11 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="assets\floor.obj" />
+    <Content Include="assets\font.png" />
+    <Content Include="assets\teapot.obj" />
+    <Content Include="assets\wood.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
