@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{3093DF57-1EF0-4E01-82FF-ACA6176D0806}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>INFOGR2022Template</RootNamespace>
-    <AssemblyName>INFOGR2022Template</AssemblyName>
+    <RootNamespace>INFOGR2019Tmpl8</RootNamespace>
+    <AssemblyName>INFOGR2019Tmpl8</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -47,24 +47,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CustomClasses.cs" />
-    <Compile Include="Raytracer.cs" />
+    <Compile Include="mesh.cs" />
+    <Compile Include="meshLoader.cs" />
+    <Compile Include="MyApplication.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RaytracerComponents.cs" />
-    <Compile Include="Surface.cs" />
-    <Compile Include="Template.cs" />
-    <Compile Include="Texture.cs" />
+    <Compile Include="quad.cs" />
+    <Compile Include="rendertarget.cs" />
+    <Compile Include="shader.cs" />
+    <Compile Include="surface.cs" />
+    <Compile Include="template.cs" />
+    <Compile Include="texture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="shaders\fs.glsl" />
+    <None Include="shaders\fs_post.glsl" />
+    <None Include="shaders\vs.glsl" />
+    <None Include="shaders\vs_post.glsl" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
