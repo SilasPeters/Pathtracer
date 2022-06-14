@@ -50,6 +50,7 @@
     <Compile Include="mesh.cs" />
     <Compile Include="meshLoader.cs" />
     <Compile Include="MyApplication.cs" />
+    <Compile Include="Hierarchy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="quad.cs" />
     <Compile Include="rendertarget.cs" />
@@ -75,6 +76,7 @@
     <Content Include="assets\font.png" />
     <Content Include="assets\teapot.obj" />
     <Content Include="assets\wood.jpg" />
+    <Compile Include="ObjectsnStuff.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

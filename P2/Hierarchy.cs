@@ -1,0 +1,80 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using OpenTK;
+using Template;
+
+namespace JackNSilo
+{
+	public class Cam : Pass
+	{
+		protected Matrix4 ietsIGuess;
+
+		public Cam(bool enabled = true) : base(null, enabled)
+		{
+		}
+	}
+	
+	public class SceneGraph
+	{
+		private ISmashable Camera = new Pass(null); // root
+		
+		public void Render(Matrix4 camMatrix)
+		{
+			
+		}
+	}
+
+	public class Smash : Mesh, ISmashable
+	{
+		// Native fields of a general mesh
+		public Transform Transform;
+		public Texture Texture;
+		public Shader Shader;
+		public Matrix4 ModelMatrix;
+		
+		// Fields implementing ISmashable
+		public ISmashable              Parent   { get; set; }
+		public ICollection<ISmashable> Children { get; set; } // This was not intended
+		public bool                    Enabled  { get; set; }
+		
+		public Smash(string fileName, Smash parent, bool enabled = true) : base(fileName) {
+			Parent  = parent;
+			Parent.Children.Add(this);
+			Enabled = enabled;
+		}
+
+		public void Kill() {
+			Parent.Children.Remove(this); // Garbage collector will move every child to an orphanage
+			Enabled = false;
+		}
+	}
+
+	public class Pass : ISmashable
+	{
+		public ISmashable              Parent   { get; set; }
+		public ICollection<ISmashable> Children { get; set; }
+		public bool                    Enabled  { get; set; }
+
+		public Pass(ISmashable parent, bool enabled = true) {
+			Enabled = enabled;
+			Parent  = parent;
+		}
+	}
+
+	public interface ISmashable
+	{
+		ISmashable              Parent   { get; set; }
+		ICollection<ISmashable> Children { get; set; } // This was not intended
+		bool                    Enabled  { get; set; }
+	}
+
+	public struct Transform
+	{
+		public Matrix4 localPos;
+		public Matrix4 localRotation;
+
+		public void Translate(Matrix4 translation) => localPos *= translation;
+		public void Rotate(Matrix4 rotation)       => localRotation *= rotation;
+	}
+}
