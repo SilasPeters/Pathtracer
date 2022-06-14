@@ -8,10 +8,11 @@ namespace JackNSilo
 {
 	public class Cam : Pass
 	{
-		protected Matrix4 ietsIGuess;
+		public Matrix4 transform;
 
-		public Cam(bool enabled = true) : base(null, enabled)
+		public Cam(Matrix4 transform, bool enabled = true) : base(null, enabled)
 		{
+			this.transform = transform;
 		}
 	}
 	

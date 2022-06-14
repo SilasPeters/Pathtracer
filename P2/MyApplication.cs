@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using OpenTK;
+using System;
+using JackNSilo;
+using OpenTK.Input;
 
 namespace Template
 {
@@ -44,7 +47,48 @@ namespace Template
 			screen.Clear( 0 );
 			screen.Print( "hello world", 2, 2, 0xffff00 );
 		}
+		private static void HandleUserInput(Cam Tcamera)
+		{
+			var currentKeyboardState = Keyboard.GetState();
 
+			//movement
+			if (currentKeyboardState[Key.W])
+			{
+				Tcamera.transform = Matrix4.CreateTranslation(new Vector3(0, -5.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
+				Console.WriteLine("lol");
+			}
+			if (currentKeyboardState[Key.A])
+				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z - 1, Tcamera.Column3.W);
+			if (currentKeyboardState[Key.S])
+				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X - 1, Tcamera.Column3.Y, Tcamera.Column3.Z, Tcamera.Column3.W);
+			if (currentKeyboardState[Key.D]) { }
+
+				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z + 1, Tcamera.Column3.W);
+			/*
+			//rotation
+			if (currentKeyboardState[Key.Right])
+				Tcamera.PivotY(Tcamera.Rotation.Y + pivotDegrees);
+			if (currentKeyboardState[Key.Left])
+				Tcamera.PivotY(Tcamera.Rotation.Y - pivotDegrees);
+			if (currentKeyboardState[Key.Up])
+				Tcamera.PivotX(Tcamera.Rotation.X - pivotDegrees);
+			if (currentKeyboardState[Key.Down])
+				Tcamera.PivotX(Tcamera.Rotation.X + pivotDegrees);
+			if (currentKeyboardState[Key.Q])
+				Tcamera.PivotZ(Tcamera.Rotation.Z + pivotDegrees);
+			if (currentKeyboardState[Key.E])
+				Tcamera.PivotZ(Tcamera.Rotation.Z - pivotDegrees);
+			//zoom
+			if (currentKeyboardState[Key.Z])
+				Tcamera.Lens.Distance *= 1.5f;
+			if (currentKeyboardState[Key.X])
+				Tcamera.Lens.Distance *= 0.5f;
+			
+			//logics to check whether this is the first frame on which a button is pressed  
+			lastKeyboardState = currentKeyboardState;
+			bool firstPressed(Key key) => currentKeyboardState[key] && !lastKeyboardState[key];
+			*/
+		}
 		// tick for OpenGL rendering code
 		public void RenderGL()
 		{
@@ -57,8 +101,10 @@ namespace Template
 			float angle90degrees = PI / 2;
 			Matrix4 Tpot = Matrix4.CreateScale( 0.5f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
 			Matrix4 Tfloor = Matrix4.CreateScale( 4.0f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
-			Matrix4 Tcamera = Matrix4.CreateTranslation( new Vector3( 0, -14.5f, 0 ) ) * Matrix4.CreateFromAxisAngle( new Vector3( 1, 0, 0 ), angle90degrees );
+			Cam Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees));
 			Matrix4 Tview = Matrix4.CreatePerspectiveFieldOfView( 1.2f, 1.3f, .1f, 1000 );
+
+			HandleUserInput(Tcam);
 
 			// update rotation
 			a += 0.001f * frameDuration;
@@ -70,8 +116,8 @@ namespace Template
 				target.Bind();
 
 				// render scene to render target
-				mesh.Render( shader, Tpot * Tcamera * Tview, wood );
-				floor.Render( shader, Tfloor * Tcamera * Tview, wood );
+				mesh.Render( shader, Tpot * Tcam.transform * Tview, wood );
+				floor.Render( shader, Tfloor * Tcam.transform * Tview, wood );
 
 				// render quad
 				target.Unbind();
@@ -80,8 +126,8 @@ namespace Template
 			else
 			{
 				// render scene directly to the screen
-				mesh.Render( shader, Tpot * Tcamera * Tview, wood );
-				floor.Render( shader, Tfloor * Tcamera * Tview, wood );
+				mesh.Render( shader, Tpot * Tcam.transform * Tview, wood );
+				floor.Render( shader, Tfloor * Tcam.transform * Tview, wood );
 			}
 		}
 	}
