@@ -29,17 +29,17 @@ namespace JackNSilo
 	public class Smash : Mesh, ISmashable
 	{
 		// Native fields of a general mesh
-		public Transform Transform;
 		public Texture Texture;
 		public Shader Shader;
 		public Matrix4 ModelMatrix;
 		
-		// Fields implementing ISmashable
-		public ISmashable              Parent   { get; set; }
-		public ICollection<ISmashable> Children { get; set; } // This was not intended
-		public bool                    Enabled  { get; set; }
+		// Fields for implementing ISmashable
+		public Transform               Transform { get; set; }
+		public ISmashable              Parent    { get; set; }
+		public ICollection<ISmashable> Children  { get; set; } // This was not intended
+		public bool                    Enabled   { get; set; }
 		
-		public Smash(string fileName, Smash parent, bool enabled = true) : base(fileName) {
+		public Smash(string fileName, ISmashable parent, bool enabled = true) : base(fileName) {
 			Parent  = parent;
 			Parent.Children.Add(this);
 			Enabled = enabled;
@@ -53,9 +53,10 @@ namespace JackNSilo
 
 	public class Pass : ISmashable
 	{
-		public ISmashable              Parent   { get; set; }
-		public ICollection<ISmashable> Children { get; set; }
-		public bool                    Enabled  { get; set; }
+		public Transform               Transform { get; set; }
+		public ISmashable              Parent    { get; set; }
+		public ICollection<ISmashable> Children  { get; set; }
+		public bool                    Enabled   { get; set; }
 
 		public Pass(ISmashable parent, bool enabled = true) {
 			Enabled = enabled;
@@ -65,9 +66,10 @@ namespace JackNSilo
 
 	public interface ISmashable
 	{
-		ISmashable              Parent   { get; set; }
-		ICollection<ISmashable> Children { get; set; } // This was not intended
-		bool                    Enabled  { get; set; }
+		Transform               Transform { get; set; }
+		ISmashable              Parent    { get; set; }
+		ICollection<ISmashable> Children  { get; set; } // This was not intended
+		bool                    Enabled   { get; set; }
 	}
 
 	public struct Transform
