@@ -9,10 +9,13 @@ namespace JackNSilo
 	public class Cam : Pass
 	{
 		public Matrix4 transform;
-
-		public Cam(Matrix4 transform, bool enabled = true) : base(null, enabled)
+		public Vector3 up;
+		public Vector3 front;
+		public Cam(Matrix4 transform, Vector3 up, Vector3 front, bool enabled = true) : base(null, enabled)
 		{
 			this.transform = transform;
+			this.up = up;	
+			this.front = front;
 		}
 	}
 	
