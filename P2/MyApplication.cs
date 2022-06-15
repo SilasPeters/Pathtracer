@@ -12,6 +12,7 @@ namespace Template
 		public Surface screen;                  // background surface for printing etc.
 		Mesh mesh, floor;                       // a mesh to draw using OpenGL
 		const float PI = 3.1415926535f;         // PI
+		float angle90degrees = PI / 2;
 		float a = 0;                            // teapot rotation angle
 		Stopwatch timer;                        // timer for measuring frame duration
 		Shader shader;                          // shader to use for rendering
@@ -20,10 +21,14 @@ namespace Template
 		RenderTarget target;                    // intermediate render target
 		ScreenQuad quad;                        // screen filling quad for post processing
 		bool useRenderTarget = true;
+		Cam Tcam;
+
+
 
 		// initialize
 		public void Init()
 		{
+			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees), new Vector3(), new Vector3(), new Vector3(0, -14, 0));
 			// load teapot
 			mesh = new Mesh( "../../assets/teapot.obj" );
 			floor = new Mesh( "../../assets/floor.obj" );
@@ -53,9 +58,9 @@ namespace Template
 
 			//movement
 			if (currentKeyboardState[Key.W])
-			{
-				Tcamera.transform = Matrix4.CreateTranslation(new Vector3(0, -5.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
-				Console.WriteLine("lol");
+            {
+				Tcamera.pos += new Vector3(0, -1f, 0);
+				Tcamera.transform = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
 			}
 			if (currentKeyboardState[Key.A])
 				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z - 1, Tcamera.Column3.W);
@@ -98,10 +103,8 @@ namespace Template
 			timer.Start();
 
 			// prepare matrix for vertex shader
-			float angle90degrees = PI / 2;
 			Matrix4 Tpot = Matrix4.CreateScale( 0.5f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
 			Matrix4 Tfloor = Matrix4.CreateScale( 4.0f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
-			Cam Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees));
 			Matrix4 Tview = Matrix4.CreatePerspectiveFieldOfView( 1.2f, 1.3f, .1f, 1000 );
 
 			HandleUserInput(Tcam);

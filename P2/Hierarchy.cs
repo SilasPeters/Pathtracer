@@ -11,11 +11,13 @@ namespace JackNSilo
 		public Matrix4 transform;
 		public Vector3 up;
 		public Vector3 front;
-		public Cam(Matrix4 transform, Vector3 up, Vector3 front, bool enabled = true) : base(null, enabled)
+		public Vector3 pos;
+		public Cam(Matrix4 transform, Vector3 up, Vector3 front, Vector3 pos, bool enabled = true) : base(null, enabled)
 		{
 			this.transform = transform;
 			this.up = up;	
 			this.front = front;
+			this.pos = pos;
 		}
 	}
 	
