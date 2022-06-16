@@ -33,7 +33,7 @@ namespace Template
 		// initialize
 		public void Init()
 		{
-			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees), new Transform(), new Vector3(), new Vector3(), new Vector3(0, -14, 0));
+			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, angle90degrees), Vector3.UnitZ, -Vector3.UnitY, Vector3.UnitX, new Vector3(0, -14, 0));
 			// load teapot
 			mesh = new Mesh( "../../assets/teapot.obj" );
 			floor = new Mesh( "../../assets/floor.obj" );
@@ -62,19 +62,28 @@ namespace Template
 		{
 			var currentKeyboardState = Keyboard.GetState();
 
-			//movement
+			//movement angles still need work
 			if (currentKeyboardState[Key.W])
             {
-				Tcamera.pos += new Vector3(0, -1f, 0);
-				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
+	            Tcamera.pos += Tcamera.front * -Vector3.UnitY; //front * amount
+				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
 			}
 			if (currentKeyboardState[Key.A])
-				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z - 1, Tcamera.Column3.W);
+            {
+				Tcamera.pos -= Tcamera.right * -Vector3.UnitZ; //front * amount
+				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+			}
 			if (currentKeyboardState[Key.S])
-				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X - 1, Tcamera.Column3.Y, Tcamera.Column3.Z, Tcamera.Column3.W);
-			if (currentKeyboardState[Key.D]) { }
+			{
+				Tcamera.pos -= Tcamera.front * -Vector3.UnitY; //front * amount
+				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+			}
+			if (currentKeyboardState[Key.D])
+			{
+				Tcamera.pos += Tcamera.right * -Vector3.UnitZ; //front * amount
+				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+			}
 
-				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z + 1, Tcamera.Column3.W);
 			/*
 			//rotation
 			if (currentKeyboardState[Key.Right])

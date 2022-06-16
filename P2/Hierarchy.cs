@@ -13,13 +13,15 @@ namespace JackNSilo
 		public Matrix4 camMatrix;
 		public Vector3 up;
 		public Vector3 front;
-		public Vector3 pos;
-		public Cam(Matrix4 camMatrix, Transform transform, Vector3 up, Vector3 front, Vector3 pos, bool enabled = true) : base(transform, null, enabled)
+		public Vector3 right;
+		public Vector3 pos; //todo: in transform dit alles doen
+		
+		public Cam(Matrix4 transform, Vector3 up, Vector3 front, Vector3 right, Vector3 pos, bool enabled = true) : base(new Transform(), null, enabled)
 		{
-			this.camMatrix = camMatrix;
-			this.up        = up;	
-			this.front     = front;
-			this.pos       = pos;
+			this.up = up;	
+			this.front = front;
+			this.right = right;
+			this.pos = pos;
 		}
 	}
 	
