@@ -16,25 +16,23 @@ namespace JackNSilo
 		public Vector3 right;
 		public Vector3 pos; //todo: in transform dit alles doen
 		
-		public Cam(Matrix4 transform, Vector3 up, Vector3 front, Vector3 right, Vector3 pos, bool enabled = true) : base(new Transform(), null, enabled)
+		public Cam(Vector3 up, Vector3 front, Vector3 right, Vector3 pos, bool enabled = true) : base(new Transform(), null, enabled)
 		{
-			this.up = up;	
-			this.front = front;
-			this.right = right;
-			this.pos = pos;
+			this.camMatrix = Matrix4.CreateTranslation(pos) *
+			                 Matrix4.CreateFromAxisAngle(Vector3.UnitX, 0); //todo: beer maken
+			this.up        = up;	
+			this.front     = front;
+			this.right     = right;
+			this.pos       = pos;
 		}
 	}
 	
 	public class SceneGraph
 	{
-		private ISmashable cam;
-
-		public SceneGraph(Cam cam) => this.cam = cam;
-		
 		public void Render(Matrix4 camMatrix)
 		{
 			ICollection<Matrix4> sceenSpaces = new Collection<Matrix4>();
-			GetAllScreenSpaces(camMatrix, cam, sceenSpaces); // fill screenSpaces
+			GetAllScreenSpaces(camMatrix, Game.Cam, sceenSpaces); // fill screenSpaces
 			
 			// meer stuff
 		}
@@ -43,8 +41,8 @@ namespace JackNSilo
 		{
 			if (currentSmashable is Smash s)
 			{
-				Matrix4 screenSpace = s.ModelMatrix * s.Transform.GetWorldSpace() * camMatrix;
-				screenSpaces.Add(screenSpace);
+				//Matrix4 screenSpace = s.ModelMatrix * s.Transform.GetWorldSpace() * camMatrix;
+				//screenSpaces.Add(screenSpace);
 			}
 			
 			foreach (var child in currentSmashable.Children)
@@ -68,6 +66,7 @@ namespace JackNSilo
 		public Smash(string fileName, Transform transform, ISmashable parent, bool enabled = true) : base(fileName) {
 			Transform = transform;
 			Parent    = parent;
+			Children  = new Collection<ISmashable>();
 			Enabled   = enabled;
 			
 			Transform.belongingSmashable = this;
@@ -143,7 +142,7 @@ namespace JackNSilo
 			else // need to recalculate currentWorldSpace Transform
 			{
 				_frameLastUpdated = Game.CurrentFrame;
-				return currentWorldSpace = this + belongingSmashable.Parent.Transform.GetWorldSpace();
+				return currentWorldSpace = this + belongingSmashable.Parent?.Transform.GetWorldSpace();
 			}
 		}
 	}

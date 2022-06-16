@@ -9,7 +9,7 @@ namespace Template
 {
 	class Game
 	{
-		private SceneGraph SceneGraph = new SceneGraph(Tcam);
+		private SceneGraph SceneGraph = new SceneGraph();
 		public static ulong CurrentFrame;
 		public static ulong LastUpdateFrame;
 		
@@ -25,15 +25,20 @@ namespace Template
 		Texture wood;                           // texture to use for rendering
 		RenderTarget target;                    // intermediate render target
 		ScreenQuad quad;                        // screen filling quad for post processing
-		bool useRenderTarget = true;
-		static Cam Tcam;
+		const bool useRenderTarget = true;
+		public static Cam Cam;
 
 
 
 		// initialize
 		public void Init()
 		{
-			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, angle90degrees), Vector3.UnitZ, -Vector3.UnitY, Vector3.UnitX, new Vector3(0, -14, 0));
+			Cam = new Cam(
+				Vector3.UnitZ,
+				-Vector3.UnitY,
+				Vector3.UnitX,
+				new Vector3(0, -14, 0));
+			
 			// load teapot
 			mesh = new Mesh( "../../assets/teapot.obj" );
 			floor = new Mesh( "../../assets/floor.obj" );
@@ -58,56 +63,31 @@ namespace Template
 			screen.Clear( 0 );
 			screen.Print( "hello world", 2, 2, 0xffff00 );
 		}
-		private static void HandleUserInput(Cam Tcamera)
+		private static void HandleUserInput(Cam cam)
 		{
 			var currentKeyboardState = Keyboard.GetState();
 
 			//movement angles still need work
 			if (currentKeyboardState[Key.W])
             {
-	            Tcamera.pos += Tcamera.front * -Vector3.UnitY; //front * amount
-				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+	            cam.pos += cam.front * -Vector3.UnitY; //front * amount
+				cam.camMatrix = Matrix4.CreateTranslation(cam.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
 			}
 			if (currentKeyboardState[Key.A])
             {
-				Tcamera.pos -= Tcamera.right * -Vector3.UnitZ; //front * amount
-				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+				cam.pos -= cam.right * -Vector3.UnitZ; //front * amount
+				cam.camMatrix = Matrix4.CreateTranslation(cam.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
 			}
 			if (currentKeyboardState[Key.S])
 			{
-				Tcamera.pos -= Tcamera.front * -Vector3.UnitY; //front * amount
-				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+				cam.pos -= cam.front * -Vector3.UnitY; //front * amount
+				cam.camMatrix = Matrix4.CreateTranslation(cam.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
 			}
 			if (currentKeyboardState[Key.D])
 			{
-				Tcamera.pos += Tcamera.right * -Vector3.UnitZ; //front * amount
-				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
+				cam.pos += cam.right * -Vector3.UnitZ; //front * amount
+				cam.camMatrix = Matrix4.CreateTranslation(cam.pos) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, PI / 2);
 			}
-
-			/*
-			//rotation
-			if (currentKeyboardState[Key.Right])
-				Tcamera.PivotY(Tcamera.Rotation.Y + pivotDegrees);
-			if (currentKeyboardState[Key.Left])
-				Tcamera.PivotY(Tcamera.Rotation.Y - pivotDegrees);
-			if (currentKeyboardState[Key.Up])
-				Tcamera.PivotX(Tcamera.Rotation.X - pivotDegrees);
-			if (currentKeyboardState[Key.Down])
-				Tcamera.PivotX(Tcamera.Rotation.X + pivotDegrees);
-			if (currentKeyboardState[Key.Q])
-				Tcamera.PivotZ(Tcamera.Rotation.Z + pivotDegrees);
-			if (currentKeyboardState[Key.E])
-				Tcamera.PivotZ(Tcamera.Rotation.Z - pivotDegrees);
-			//zoom
-			if (currentKeyboardState[Key.Z])
-				Tcamera.Lens.Distance *= 1.5f;
-			if (currentKeyboardState[Key.X])
-				Tcamera.Lens.Distance *= 0.5f;
-			
-			//logics to check whether this is the first frame on which a button is pressed  
-			lastKeyboardState = currentKeyboardState;
-			bool firstPressed(Key key) => currentKeyboardState[key] && !lastKeyboardState[key];
-			*/
 		}
 		// tick for OpenGL rendering code
 		public void RenderGL()
@@ -123,9 +103,9 @@ namespace Template
 			Matrix4 Tview = Matrix4.CreatePerspectiveFieldOfView( 1.2f, 1.3f, .1f, 1000 );
 
 
-			HandleUserInput(Tcam);
+			HandleUserInput(Cam);
 			
-			SceneGraph.Render(Tcam.camMatrix);
+			//SceneGraph.Render(Cam.camMatrix);
 
 			// update rotation
 			a += 0.001f * frameDuration;
@@ -137,8 +117,8 @@ namespace Template
 				target.Bind();
 
 				// render scene to render target
-				mesh.Render( shader, Tpot * Tcam.camMatrix * Tview, wood );
-				floor.Render( shader, Tfloor * Tcam.camMatrix * Tview, wood );
+				mesh.Render( shader, Tpot * Cam.camMatrix * Tview, wood );
+				floor.Render( shader, Tfloor * Cam.camMatrix * Tview, wood );
 
 				// render quad
 				target.Unbind();
@@ -147,8 +127,8 @@ namespace Template
 			else
 			{
 				// render scene directly to the screen
-				mesh.Render( shader, Tpot * Tcam.camMatrix * Tview, wood );
-				floor.Render( shader, Tfloor * Tcam.camMatrix * Tview, wood );
+				mesh.Render( shader, Tpot * Cam.camMatrix * Tview, wood );
+				floor.Render( shader, Tfloor * Cam.camMatrix * Tview, wood );
 			}
 		}
 	}
