@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using JackNSilo;
 using OpenTK;
 using System;
 using JackNSilo;
@@ -6,8 +7,12 @@ using OpenTK.Input;
 
 namespace Template
 {
-	class MyApplication
+	class Game
 	{
+		private SceneGraph SceneGraph = new SceneGraph(Tcam);
+		public static ulong CurrentFrame;
+		public static ulong LastUpdateFrame;
+		
 		// member variables
 		public Surface screen;                  // background surface for printing etc.
 		Mesh mesh, floor;                       // a mesh to draw using OpenGL
@@ -21,14 +26,14 @@ namespace Template
 		RenderTarget target;                    // intermediate render target
 		ScreenQuad quad;                        // screen filling quad for post processing
 		bool useRenderTarget = true;
-		Cam Tcam;
+		static Cam Tcam;
 
 
 
 		// initialize
 		public void Init()
 		{
-			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees), new Vector3(), new Vector3(), new Vector3(0, -14, 0));
+			Tcam = new Cam(Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), angle90degrees), new Transform(), new Vector3(), new Vector3(), new Vector3(0, -14, 0));
 			// load teapot
 			mesh = new Mesh( "../../assets/teapot.obj" );
 			floor = new Mesh( "../../assets/floor.obj" );
@@ -49,6 +54,7 @@ namespace Template
 		// tick for background surface
 		public void Tick()
 		{
+			CurrentFrame += 1;
 			screen.Clear( 0 );
 			screen.Print( "hello world", 2, 2, 0xffff00 );
 		}
@@ -60,7 +66,7 @@ namespace Template
 			if (currentKeyboardState[Key.W])
             {
 				Tcamera.pos += new Vector3(0, -1f, 0);
-				Tcamera.transform = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
+				Tcamera.camMatrix = Matrix4.CreateTranslation(Tcamera.pos) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), PI / 2);
 			}
 			if (currentKeyboardState[Key.A])
 				//Tcamera.Column3 = new Vector4(Tcamera.Column3.X, Tcamera.Column3.Y, Tcamera.Column3.Z - 1, Tcamera.Column3.W);
@@ -107,7 +113,10 @@ namespace Template
 			Matrix4 Tfloor = Matrix4.CreateScale( 4.0f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
 			Matrix4 Tview = Matrix4.CreatePerspectiveFieldOfView( 1.2f, 1.3f, .1f, 1000 );
 
+
 			HandleUserInput(Tcam);
+			
+			SceneGraph.Render(Tcam.camMatrix);
 
 			// update rotation
 			a += 0.001f * frameDuration;
@@ -119,8 +128,8 @@ namespace Template
 				target.Bind();
 
 				// render scene to render target
-				mesh.Render( shader, Tpot * Tcam.transform * Tview, wood );
-				floor.Render( shader, Tfloor * Tcam.transform * Tview, wood );
+				mesh.Render( shader, Tpot * Tcam.camMatrix * Tview, wood );
+				floor.Render( shader, Tfloor * Tcam.camMatrix * Tview, wood );
 
 				// render quad
 				target.Unbind();
@@ -129,8 +138,8 @@ namespace Template
 			else
 			{
 				// render scene directly to the screen
-				mesh.Render( shader, Tpot * Tcam.transform * Tview, wood );
-				floor.Render( shader, Tfloor * Tcam.transform * Tview, wood );
+				mesh.Render( shader, Tpot * Tcam.camMatrix * Tview, wood );
+				floor.Render( shader, Tfloor * Tcam.camMatrix * Tview, wood );
 			}
 		}
 	}

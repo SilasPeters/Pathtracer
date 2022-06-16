@@ -49,7 +49,7 @@
   <ItemGroup>
     <Compile Include="mesh.cs" />
     <Compile Include="meshLoader.cs" />
-    <Compile Include="MyApplication.cs" />
+    <Compile Include="Game.cs" />
     <Compile Include="Hierarchy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="quad.cs" />
