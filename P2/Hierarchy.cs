@@ -10,44 +10,43 @@ namespace JackNSilo
 {
 	public class Cam : Pass
 	{
-		public Matrix4 camMatrix;
-		public Vector3 up;
-		public Vector3 front;
-		public Vector3 right;
-		public Vector3 pos; //todo: in transform dit alles doen
-		
-		public Cam(Vector3 up, Vector3 front, Vector3 right, Vector3 pos, bool enabled = true) : base(new Transform(), null, enabled)
+		public Cam(Matrix4 localPos, Matrix4 localRotation, bool enabled = true)
+			: base(localPos, localRotation, enabled)
 		{
-			this.camMatrix = Matrix4.CreateTranslation(pos) *
-			                 Matrix4.CreateFromAxisAngle(Vector3.UnitX, 0); //todo: beer maken
-			this.up        = up;	
-			this.front     = front;
-			this.right     = right;
-			this.pos       = pos;
 		}
 	}
 	
-	public class SceneGraph
+	public static class SceneGraph
 	{
-		public void Render(Matrix4 camMatrix)
+		private static ISmashable root = Game.Cam;
+		
+		public static void Render(Matrix4 toScreenConverter)
 		{
-			ICollection<Matrix4> sceenSpaces = new Collection<Matrix4>();
-			GetAllScreenSpaces(camMatrix, Game.Cam, sceenSpaces); // fill screenSpaces
-			
-			// meer stuff
+			ICollection<Matrix4> worldSpaces = new Collection<Matrix4>();
+			GetAllWorldSpaces(Matrix4.Identity, root, in worldSpaces); // fills screenSpaces
+			ICollection<Matrix4> screenSpaces = ConvertToScreenSpace(in worldSpaces, toScreenConverter);
 		}
 
-		private void GetAllScreenSpaces(Matrix4 camMatrix, ISmashable currentSmashable, in ICollection<Matrix4> screenSpaces)
+		private static void GetAllWorldSpaces(Matrix4 parentWorldSpace, ISmashable currentSmashable, in ICollection<Matrix4> screenSpaces)
 		{
-			if (currentSmashable is Smash s)
-			{
-				//Matrix4 screenSpace = s.ModelMatrix * s.Transform.GetWorldSpace() * camMatrix;
-				//screenSpaces.Add(screenSpace);
-			}
+			parentWorldSpace = currentSmashable.Transform.GetWorldSpace(parentWorldSpace);
 			
+			if (currentSmashable is Smash)
+				screenSpaces.Add(parentWorldSpace);
+
 			foreach (var child in currentSmashable.Children)
-				GetAllScreenSpaces(camMatrix, child, screenSpaces);
+				GetAllWorldSpaces(parentWorldSpace, child, screenSpaces);
 		}
+
+		private static ICollection<Matrix4> ConvertToScreenSpace(in ICollection<Matrix4> worldSpaces, Matrix4 converter)
+		{
+			ICollection<Matrix4> screenSpaces = new Collection<Matrix4>();
+			foreach (var worldSpace in worldSpaces)
+				screenSpaces.Add(worldSpace * converter);
+			return screenSpaces;
+		}
+
+		public static void AddToRoot(ISmashable addition) => root.AddChild(addition);
 	}
 
 	public class Smash : Mesh, ISmashable
@@ -55,95 +54,94 @@ namespace JackNSilo
 		// Native fields of a general mesh
 		public Texture Texture;
 		public Shader Shader;
-		public Matrix4 ModelMatrix;
 		
 		// Fields for implementing ISmashable
 		public Transform               Transform { get; set; }
-		public ISmashable              Parent    { get; set; }
 		public ICollection<ISmashable> Children  { get; set; } // This was not intended
 		public bool                    Enabled   { get; set; }
-		
-		public Smash(string fileName, Transform transform, ISmashable parent, bool enabled = true) : base(fileName) {
-			Transform = transform;
-			Parent    = parent;
-			Children  = new Collection<ISmashable>();
+
+		public Smash(string fileName, bool enabled = true) : base(fileName)
+		{
 			Enabled   = enabled;
 			
-			Transform.belongingSmashable = this;
-			Parent.Children.Add(this);
+			Children  = new Collection<ISmashable>();
+			Transform = new Transform();
 		}
-		
-		public void Kill() {
-			Parent.Children.Remove(this); // Garbage collector will move every child to an orphanage
-			Enabled = false;
+		public Smash(string fileName, Matrix4 localPos, Matrix4 localRotation, bool enabled = true) : base(fileName)
+		{
+			Enabled = enabled;
+			
+			Children  = new Collection<ISmashable>();
+			Transform = new Transform(localPos, localRotation);
 		}
+
+		public void AddChild(ISmashable addition) => Children.Add(addition);
 	}
 
 	public class Pass : ISmashable
 	{
 		public Transform               Transform { get; set; }
-		public ISmashable              Parent    { get; set; }
 		public ICollection<ISmashable> Children  { get; set; } // This was not intended
 		public bool                    Enabled   { get; set; }
 
-		public Pass(Transform transform, ISmashable parent, bool enabled = true)
+		public Pass(bool enabled = true)
 		{
-			Transform = transform;
-			Enabled   = enabled;
-			Parent    = parent;
+			Enabled = enabled;
 			
-			Transform.belongingSmashable = this;
+			Children  = new Collection<ISmashable>();
+			Transform = new Transform();
 		}
+		public Pass(Matrix4 localPos, Matrix4 localRotation, bool enabled = true)
+		{
+			Enabled = enabled;
+			
+			Children  = new Collection<ISmashable>();
+			Transform = new Transform(localPos, localRotation);
+		}
+		
+		public void AddChild(ISmashable addition) => Children.Add(addition);
 	}
 
 	public interface ISmashable
 	{
 		Transform               Transform { get; set; }
-		ISmashable              Parent    { get; set; }
 		ICollection<ISmashable> Children  { get; set; } // This was not intended
 		bool                    Enabled   { get; set; }
+
+		void AddChild(ISmashable addition);
 	}
 
 	public class Transform
 	{
-		public Matrix4 LocalPos;
-		public Matrix4 LocalRotation;
-		
-		// Fields to calculate world space
-		private ulong _frameLastUpdated = ulong.MaxValue;
-		private Transform currentWorldSpace;
-		public ISmashable belongingSmashable;
+		private Matrix4 LocalPos;
+		private Matrix4 LocalRotation;
 
-		public Transform()
-		{
-			LocalPos          = Matrix4.Zero;
-			LocalRotation     = Matrix4.Zero;
-			_frameLastUpdated = Game.CurrentFrame;
-		}
-		public Transform(Matrix4 locapPos, Matrix4 localRotation)
-		{
-			LocalPos          = locapPos;
-			LocalRotation     = localRotation;
-			_frameLastUpdated = Game.CurrentFrame;
-		}
+		public Matrix4 FullMatrix          => LocalPos * LocalRotation;
+		public Vector3 LocalPosVector      => LocalPos.ExtractTranslation();
+		public Vector3 LocalRotationVector => LocalRotation.ExtractRotation().Xyz;
 
-		public static Transform operator +(Transform a, Transform b) =>
-			new Transform(a.LocalPos + b.LocalPos, a.LocalRotation + b.LocalRotation);
+		// source: https://gamedev.stackexchange.com/questions/104862/how-to-find-the-up-direction-of-the-view-matrix-with-glm
+		public Vector3 Right => -LocalRotation.Column0.Xyz;
+		public Vector3 Up    => -LocalRotation.Column1.Xyz;
+		public Vector3 Front => LocalRotation.Column2.Xyz;
+
+		public Transform() {
+			LocalPos      = Matrix4.Identity;
+			LocalRotation = Matrix4.Identity;
+		}
+		public Transform(Matrix4 localPos, Matrix4 localRotation) {
+			LocalPos      = localPos;
+			LocalRotation = localRotation;
+		}
 
 		public void Translate(Matrix4 translation) => LocalPos *= translation;
+		public void Translate(Vector3 translation) => LocalPos *= Matrix4.CreateTranslation(translation);
 		public void Rotate(Matrix4 rotation)       => LocalRotation *= rotation;
-
-		public Transform GetWorldSpace()
-		{
-			if (Game.LastUpdateFrame == _frameLastUpdated) // No need to recalculate, pass old values
-			{
-				return this.currentWorldSpace;
-			}
-			else // need to recalculate currentWorldSpace Transform
-			{
-				_frameLastUpdated = Game.CurrentFrame;
-				return currentWorldSpace = this + belongingSmashable.Parent?.Transform.GetWorldSpace();
-			}
-		}
+		public void Rotate(Quaternion rotation)    => LocalRotation *= Matrix4.CreateFromQuaternion(rotation);
+		
+		public Matrix4 GetWorldSpace(Matrix4 parentWorldSpace) => parentWorldSpace * FullMatrix;
+		
+		//return Matrix4.CreateTranslation((baseMatrix * LocalPos).ExtractTranslation()) *
+		//       Matrix4.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2);
 	}
 }
