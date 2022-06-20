@@ -25,6 +25,8 @@ namespace JackNSilo
 			ICollection<Matrix4> worldSpaces = new Collection<Matrix4>();
 			GetAllWorldSpaces(Matrix4.Identity, root, in worldSpaces); // fills screenSpaces
 			ICollection<Matrix4> screenSpaces = ConvertToScreenSpace(in worldSpaces, toScreenConverter);
+			
+			
 		}
 
 		private static void GetAllWorldSpaces(Matrix4 parentWorldSpace, ISmashable currentSmashable, in ICollection<Matrix4> screenSpaces)
@@ -42,7 +44,7 @@ namespace JackNSilo
 		{
 			ICollection<Matrix4> screenSpaces = new Collection<Matrix4>();
 			foreach (var worldSpace in worldSpaces)
-				screenSpaces.Add(worldSpace * converter);
+				screenSpaces.Add(converter * worldSpace);
 			return screenSpaces;
 		}
 
@@ -111,13 +113,13 @@ namespace JackNSilo
 		void AddChild(ISmashable addition);
 	}
 
-	public class Transform
+	public class Transform //todo: struct?
 	{
-		private Matrix4 LocalPos;
-		private Matrix4 LocalRotation;
+		public Matrix4 LocalTranslation { get; private set; }
+		public Matrix4 LocalRotation    { get; private set; }
 
-		public Matrix4 FullMatrix          => LocalPos * LocalRotation;
-		public Vector3 LocalPosVector      => LocalPos.ExtractTranslation();
+		public Matrix4 FullMatrix          => LocalTranslation * LocalRotation;
+		public Vector3 LocalPosVector      => LocalTranslation.ExtractTranslation();
 		public Vector3 LocalRotationVector => LocalRotation.ExtractRotation().Xyz;
 
 		// source: https://gamedev.stackexchange.com/questions/104862/how-to-find-the-up-direction-of-the-view-matrix-with-glm
@@ -126,16 +128,16 @@ namespace JackNSilo
 		public Vector3 Front => LocalRotation.Column2.Xyz;
 
 		public Transform() {
-			LocalPos      = Matrix4.Identity;
+			LocalTranslation      = Matrix4.Identity;
 			LocalRotation = Matrix4.Identity;
 		}
-		public Transform(Matrix4 localPos, Matrix4 localRotation) {
-			LocalPos      = localPos;
+		public Transform(Matrix4 localTranslation, Matrix4 localRotation) {
+			LocalTranslation      = localTranslation;
 			LocalRotation = localRotation;
 		}
 
-		public void Translate(Matrix4 translation) => LocalPos *= translation;
-		public void Translate(Vector3 translation) => LocalPos *= Matrix4.CreateTranslation(translation);
+		public void Translate(Matrix4 translation) => LocalTranslation *= translation;
+		public void Translate(Vector3 translation) => LocalTranslation *= Matrix4.CreateTranslation(translation);
 		public void Rotate(Matrix4 rotation)       => LocalRotation *= rotation;
 		public void Rotate(Quaternion rotation)    => LocalRotation *= Matrix4.CreateFromQuaternion(rotation);
 		

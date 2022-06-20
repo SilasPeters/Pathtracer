@@ -24,6 +24,10 @@ namespace Template
 		const bool useRenderTarget = true;
 		
 		public static Cam Cam;
+		public const float FOV = 1.2f;
+		public const float AspectRatio = 16f / 9;
+		public const float ZNear = 0.1f;
+		public const float ZFar = 20f;
 		public const float MovementSpeed = 100;
 		public const float RotationSpeed = 50f / 10;
 
@@ -101,8 +105,7 @@ namespace Template
 		{
 			// measure frame duration
 			float frameDuration = timer.ElapsedMilliseconds;
-			timer.Reset();
-			timer.Start();
+			timer.Restart();
 
 			// prepare matrix for vertex shader
 			Matrix4 Tpot = Matrix4.CreateScale( 0.5f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
@@ -111,7 +114,17 @@ namespace Template
 
 
 			HandleUserInput(Cam, frameDuration);
-			SceneGraph.Render(Matrix4.Identity);
+			// source: slides ALL ASSUMING RIGHT ASSOCIATIVITY
+			Vector3 sbMin = new Vector3(-4, -4, -4); //sceneBoundingBoxMin
+			Vector3 sbMax = new Vector3(4, 4, 4); //sceneBoundingBoxMax
+			Matrix4 camera = Cam.Transform.LocalRotation *
+			                (Cam.Transform.LocalTranslation * Matrix4.CreateTranslation(-1, -1, -1)); //Matrix4.LookAt()
+			Matrix4 ortho = Matrix4.CreateScale(new Vector3(2 / (sbMax.X - sbMin.X), 2 / (sbMax.Y - sbMin.Y), 2 / (sbMax.Z - sbMin.Z)))
+			              * Matrix4.CreateTranslation(-(sbMax - sbMin) / 2);
+			Matrix4 viewPort = Matrix4.CreateTranslation(screen.width / 2f, screen.height / 2f, 0)
+			                 * Matrix4.CreateScale(screen.width / 2f, screen.height / 2f, 1);
+			Matrix4 perspective = Matrix4.CreatePerspectiveFieldOfView(FOV, AspectRatio, ZNear, ZFar);
+			SceneGraph.Render(viewPort * ortho * perspective * camera);
 
 			// update rotation
 			a += 0.001f * frameDuration;
