@@ -9,54 +9,61 @@ namespace Template
 {
 	class Game
 	{
-		// member variables
-		public Surface screen;                  // background surface for printing etc.
-		Mesh mesh, floor;                       // a mesh to draw using OpenGL
-		const float PI = 3.1415926535f;         // PI
-		float angle90degrees = PI / 2;
-		float a = 0;                            // teapot rotation angle
-		Stopwatch timer;                        // timer for measuring frame duration
-		Shader shader;                          // shader to use for rendering
-		Shader postproc;                        // shader to use for post processing
-		Texture wood;                           // texture to use for rendering
-		RenderTarget target;                    // intermediate render target
-		ScreenQuad quad;                        // screen filling quad for post processing
-		const bool useRenderTarget = true;
+		// General member-veriables
+		private Stopwatch timer;			// timer for measuring frame duration
+		public  Surface screen;				// background surface for printing etc.
+		private RenderTarget target;		// intermediate render target
+		private ScreenQuad quad;			// screen filling quad for post processing
+		private Shader postproc;			// Shader which is used during post-processing
+		private const bool useRenderTarget = true;
 		
+		// Custom member-variables
 		public static Cam Cam;
-		public const float FOV = 1.2f;
-		public const float AspectRatio = 16f / 9;
-		public const float ZNear = 0.1f;
-		public const float ZFar = 20f;
-		public const float MovementSpeed = 100;
-		public const float RotationSpeed = 50f / 10;
+		public static Matrix4 perspective;
+		public static Matrix4 ortho;
+		public static Matrix4 viewPort;
+		private const float Fov = 1f;
+		private const float AspectRatio = 1.3f;
+		private const float ZNear = 0.1f;
+		private const float ZFar = 2000f;
+		private const float MovementSpeed = 100;
+		private const float RotationSpeed = 50f / 10;
 
-
-
-		// initialize
+		// Misc
+		float a = 0;				// teapot rotation angle
+		
 		public void Init()
 		{
-			Cam = new Cam(Matrix4.CreateTranslation(0, -14, 0), Matrix4.CreateRotationX(0));
-			Smash child = new Smash("../../assets/teapot.obj", Matrix4.CreateTranslation(2, 0, 2), Matrix4.Identity);
-			Smash grandChild = new Smash("../../assets/teapot.obj", Matrix4.CreateTranslation(1, 2, 0), Matrix4.Identity);
-			child.AddChild(grandChild);
-			SceneGraph.AddToRoot(child);
-
-			// load teapot
-			mesh = new Mesh( "../../assets/teapot.obj" );
-			floor = new Mesh( "../../assets/floor.obj" );
-			// initialize stopwatch
+			// Store global variables
 			timer = new Stopwatch();
-			timer.Reset();
 			timer.Start();
-			// create shaders
-			shader = new Shader( "../../shaders/vs.glsl", "../../shaders/fs.glsl" );
-			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
-			// load a texture
-			wood = new Texture( "../../assets/wood.jpg" );
-			// create the render target
 			target = new RenderTarget( screen.width, screen.height );
 			quad = new ScreenQuad();
+			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
+			
+			// Pre-calculate matrices
+			// source: slides
+			//Vector3 sbMin = new Vector3(-4, -4, -4); //sceneBoundingBoxMin
+			//Vector3 sbMax = new Vector3(4,  4,  4);  //sceneBoundingBoxMax
+			//Matrix4 camera = Cam.Transform.LocalRotation *
+			//                (Cam.Transform.LocalTranslation * Matrix4.CreateTranslation(-1, -1, -1)); //Matrix4.LookAt()
+			//ortho = Matrix4.CreateScale(new Vector3(2 / (sbMax.X - sbMin.X), 2 / (sbMax.Y - sbMin.Y), 2 / (sbMax.Z - sbMin.Z)))
+			//                * Matrix4.CreateTranslation(-(sbMax - sbMin) / 2);
+			//viewPort = Matrix4.CreateTranslation(screen.width / 2f, screen.height / 2f, 0)
+			//                   * Matrix4.CreateScale(screen.width / 2f, screen.height / 2f, 1);
+			perspective = Matrix4.CreatePerspectiveFieldOfView(Fov, AspectRatio, ZNear, ZFar);
+			
+			// create shaders
+			Shader shader = new Shader( "../../shaders/vs.glsl", "../../shaders/fs.glsl" );
+			// load a texture
+			Texture wood = new Texture( "../../assets/wood.jpg" );
+			
+			// Define hierarchy
+			Cam = new Cam(Matrix4.CreateTranslation(0, 0, 0), Matrix4.CreateRotationX(0));
+			Smash child = new Smash("../../assets/teapot.obj", Matrix4.CreateTranslation(0, 0, 0), Matrix4.Identity, wood, shader);
+			Smash grandChild = new Smash("../../assets/floor.obj", Matrix4.CreateTranslation(10, 0, 0), Matrix4.Identity, wood, shader);
+			child.AddChild(grandChild);
+			SceneGraph.AddToRoot(child);
 		}
 
 		// tick for background surface
@@ -65,40 +72,40 @@ namespace Template
 			screen.Clear( 0 );
 			screen.Print( "hello world", 2, 2, 0xffff00 );
 		}
-		private static void HandleUserInput(Cam cam, float deltaTime)
+		private static void HandleUserInput(float deltaTime)
 		{
 			var currentKeyboardState = Keyboard.GetState();
 			deltaTime /= 1000; //ms
 
 			// Translation
 			if (currentKeyboardState[Key.W])
-				cam.Transform.Translate(cam.Transform.Front * MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Front * MovementSpeed * deltaTime);
 			if (currentKeyboardState[Key.A])
-				cam.Transform.Translate(cam.Transform.Right * -MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Right * -MovementSpeed * deltaTime);
 			if (currentKeyboardState[Key.S])
-				cam.Transform.Translate(cam.Transform.Front * -MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Front * -MovementSpeed * deltaTime);
 			if (currentKeyboardState[Key.D])
-				cam.Transform.Translate(cam.Transform.Right * MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Right * MovementSpeed * deltaTime);
 			if (currentKeyboardState[Key.Space])
-				cam.Transform.Translate(cam.Transform.Up * MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Up * MovementSpeed * deltaTime);
 			if (currentKeyboardState[Key.ShiftLeft])
-				cam.Transform.Translate(cam.Transform.Up * -MovementSpeed * deltaTime);
+				Cam.Transform.Translate(Cam.Transform.Up * -MovementSpeed * deltaTime);
 			
 			// Looking around
 			if (currentKeyboardState[Key.Up])
-				cam.Transform.Rotate(Matrix4.CreateRotationX(-RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationX(-RotationSpeed * deltaTime));
 			if (currentKeyboardState[Key.Left])
-				cam.Transform.Rotate(Matrix4.CreateRotationY(-RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationY(-RotationSpeed * deltaTime));
 			if (currentKeyboardState[Key.Down])
-				cam.Transform.Rotate(Matrix4.CreateRotationX(RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationX(RotationSpeed * deltaTime));
 			if (currentKeyboardState[Key.Right])
-				cam.Transform.Rotate(Matrix4.CreateRotationY(RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationY(RotationSpeed * deltaTime));
 			
 			// Tilting
 			if (currentKeyboardState[Key.Q])
-				cam.Transform.Rotate(Matrix4.CreateRotationZ(-RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationZ(-RotationSpeed * deltaTime));
 			if (currentKeyboardState[Key.E])
-				cam.Transform.Rotate(Matrix4.CreateRotationZ(RotationSpeed * deltaTime));
+				Cam.Transform.Rotate(Matrix4.CreateRotationZ(RotationSpeed * deltaTime));
 		}
 		// tick for OpenGL rendering code
 		public void RenderGL()
@@ -107,28 +114,11 @@ namespace Template
 			float frameDuration = timer.ElapsedMilliseconds;
 			timer.Restart();
 
-			// prepare matrix for vertex shader
-			Matrix4 Tpot = Matrix4.CreateScale( 0.5f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
-			Matrix4 Tfloor = Matrix4.CreateScale( 4.0f ) * Matrix4.CreateFromAxisAngle( new Vector3( 0, 1, 0 ), a );
-			Matrix4 Tview = Matrix4.CreatePerspectiveFieldOfView( 1.2f, 1.3f, .1f, 1000 );
-
-
-			HandleUserInput(Cam, frameDuration);
-			// source: slides ALL ASSUMING RIGHT ASSOCIATIVITY
-			Vector3 sbMin = new Vector3(-4, -4, -4); //sceneBoundingBoxMin
-			Vector3 sbMax = new Vector3(4, 4, 4); //sceneBoundingBoxMax
-			Matrix4 camera = Cam.Transform.LocalRotation *
-			                (Cam.Transform.LocalTranslation * Matrix4.CreateTranslation(-1, -1, -1)); //Matrix4.LookAt()
-			Matrix4 ortho = Matrix4.CreateScale(new Vector3(2 / (sbMax.X - sbMin.X), 2 / (sbMax.Y - sbMin.Y), 2 / (sbMax.Z - sbMin.Z)))
-			              * Matrix4.CreateTranslation(-(sbMax - sbMin) / 2);
-			Matrix4 viewPort = Matrix4.CreateTranslation(screen.width / 2f, screen.height / 2f, 0)
-			                 * Matrix4.CreateScale(screen.width / 2f, screen.height / 2f, 1);
-			Matrix4 perspective = Matrix4.CreatePerspectiveFieldOfView(FOV, AspectRatio, ZNear, ZFar);
-			SceneGraph.Render(viewPort * ortho * perspective * camera);
-
 			// update rotation
-			a += 0.001f * frameDuration;
-			if( a > 2 * PI ) a -= 2 * PI;
+			//a += 0.001f * frameDuration;
+			//if( a > 2 * PI ) a -= 2 * PI;
+
+			HandleUserInput(frameDuration);
 
 			if( useRenderTarget )
 			{
@@ -136,9 +126,10 @@ namespace Template
 				target.Bind();
 
 				// render scene to render target
-				mesh.Render( shader, Tpot * Cam.Transform.FullMatrix * Tview, wood );
-				floor.Render( shader, Tfloor * Cam.Transform.FullMatrix * Tview, wood );
-
+				//mesh.Render( shader, Tpot * Cam.Transform.FullMatrix * Tview, wood );
+				//floor.Render( shader, Tfloor * Cam.Transform.FullMatrix * Tview, wood );
+				SceneGraph.Render();
+				
 				// render quad
 				target.Unbind();
 				quad.Render( postproc, target.GetTextureID() );
@@ -146,8 +137,9 @@ namespace Template
 			else
 			{
 				// render scene directly to the screen
-				mesh.Render( shader, Tpot * Cam.Transform.FullMatrix * Tview, wood );
-				floor.Render( shader, Tfloor * Cam.Transform.FullMatrix * Tview, wood );
+				//mesh.Render( shader, Tpot * Cam.Transform.FullMatrix * Tview, wood );
+				//floor.Render( shader, Tfloor * Cam.Transform.FullMatrix * Tview, wood );
+				//SceneGraph.Render();
 			}
 		}
 	}

@@ -20,33 +20,35 @@ namespace JackNSilo
 	{
 		private static ISmashable root = Game.Cam;
 		
-		public static void Render(Matrix4 toScreenConverter)
+		private static ICollection<Smash> convertedSmashes = new Collection<Smash>();
+		
+		public static void Render()
 		{
-			ICollection<Matrix4> worldSpaces = new Collection<Matrix4>();
-			GetAllWorldSpaces(Matrix4.Identity, root, in worldSpaces); // fills screenSpaces
-			ICollection<Matrix4> screenSpaces = ConvertToScreenSpace(in worldSpaces, toScreenConverter);
-			
-			
+			convertedSmashes.Clear();
+			StoreAllWorldSpaces(Matrix4.Identity, root); // fills convertedSmashes
+
+			foreach (var Smosh in convertedSmashes)
+				Smosh.Render();
 		}
 
-		private static void GetAllWorldSpaces(Matrix4 parentWorldSpace, ISmashable currentSmashable, in ICollection<Matrix4> screenSpaces)
+		private static void StoreAllWorldSpaces(Matrix4 parentWorldSpace, ISmashable currentSmashable)
 		{
 			parentWorldSpace = currentSmashable.Transform.GetWorldSpace(parentWorldSpace);
-			
-			if (currentSmashable is Smash)
-				screenSpaces.Add(parentWorldSpace);
+
+			if (currentSmashable is Smash s) {
+				s.LastWorldSpace = parentWorldSpace;
+				convertedSmashes.Add(s);
+			}
 
 			foreach (var child in currentSmashable.Children)
-				GetAllWorldSpaces(parentWorldSpace, child, screenSpaces);
+				StoreAllWorldSpaces(parentWorldSpace, child);
 		}
 
-		private static ICollection<Matrix4> ConvertToScreenSpace(in ICollection<Matrix4> worldSpaces, Matrix4 converter)
-		{
-			ICollection<Matrix4> screenSpaces = new Collection<Matrix4>();
-			foreach (var worldSpace in worldSpaces)
-				screenSpaces.Add(converter * worldSpace);
-			return screenSpaces;
-		}
+		//private static void ConvertToScreenSpace(Matrix4 converter)
+		//{
+		//	foreach (var worldSmash in convertedSmashes)
+		//		worldSmash.LastWorldSpace *= converter;
+		//}
 
 		public static void AddToRoot(ISmashable addition) => root.AddChild(addition);
 	}
@@ -54,8 +56,9 @@ namespace JackNSilo
 	public class Smash : Mesh, ISmashable
 	{
 		// Native fields of a general mesh
-		public Texture Texture;
-		public Shader Shader;
+		public Template.Texture Texture;
+		public Template.Shader Shader;
+		public Matrix4 LastWorldSpace;
 		
 		// Fields for implementing ISmashable
 		public Transform               Transform { get; set; }
@@ -68,13 +71,23 @@ namespace JackNSilo
 			
 			Children  = new Collection<ISmashable>();
 			Transform = new Transform();
+			Texture   = new Template.Texture( "../../assets/wood.jpg" );
+			Shader    = new Template.Shader("../../shaders/vs.glsl", "../../shaders/fs.glsl");
 		}
-		public Smash(string fileName, Matrix4 localPos, Matrix4 localRotation, bool enabled = true) : base(fileName)
+		public Smash(string fileName, Matrix4 localPos, Matrix4 localRotation, Template.Texture texture, Template.Shader shader, bool enabled = true) : base(fileName)
 		{
 			Enabled = enabled;
 			
 			Children  = new Collection<ISmashable>();
 			Transform = new Transform(localPos, localRotation);
+			Texture   = texture;
+			Shader    = shader;
+		}
+
+		public void Render()
+		{
+			//Console.WriteLine(Game.ortho * LastWorldSpace * Game.perspective);
+			base.Render(Shader, LastWorldSpace * Game.perspective, Texture);
 		}
 
 		public void AddChild(ISmashable addition) => Children.Add(addition);
@@ -125,15 +138,15 @@ namespace JackNSilo
 		// source: https://gamedev.stackexchange.com/questions/104862/how-to-find-the-up-direction-of-the-view-matrix-with-glm
 		public Vector3 Right => -LocalRotation.Column0.Xyz;
 		public Vector3 Up    => -LocalRotation.Column1.Xyz;
-		public Vector3 Front => LocalRotation.Column2.Xyz;
+		public Vector3 Front =>  LocalRotation.Column2.Xyz;
 
 		public Transform() {
-			LocalTranslation      = Matrix4.Identity;
-			LocalRotation = Matrix4.Identity;
+			LocalTranslation = Matrix4.Identity;
+			LocalRotation    = Matrix4.Identity;
 		}
 		public Transform(Matrix4 localTranslation, Matrix4 localRotation) {
-			LocalTranslation      = localTranslation;
-			LocalRotation = localRotation;
+			LocalTranslation = localTranslation;
+			LocalRotation    = localRotation;
 		}
 
 		public void Translate(Matrix4 translation) => LocalTranslation *= translation;
@@ -141,7 +154,7 @@ namespace JackNSilo
 		public void Rotate(Matrix4 rotation)       => LocalRotation *= rotation;
 		public void Rotate(Quaternion rotation)    => LocalRotation *= Matrix4.CreateFromQuaternion(rotation);
 		
-		public Matrix4 GetWorldSpace(Matrix4 parentWorldSpace) => parentWorldSpace * FullMatrix;
+		public Matrix4 GetWorldSpace(Matrix4 parentWorldSpace) => FullMatrix * parentWorldSpace;
 		
 		//return Matrix4.CreateTranslation((baseMatrix * LocalPos).ExtractTranslation()) *
 		//       Matrix4.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2);
