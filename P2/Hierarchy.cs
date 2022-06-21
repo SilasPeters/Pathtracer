@@ -159,4 +159,20 @@ namespace JackNSilo
 		//return Matrix4.CreateTranslation((baseMatrix * LocalPos).ExtractTranslation()) *
 		//       Matrix4.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2);
 	}
+	public class LightSource 
+	{
+		Smash Smash;
+		public Vector3 Pos { get; }
+		public float Radius { get; }
+		public Vector3 Color { get; }
+
+		/// <param name="radius">Only used for the debugcam</param>
+        public LightSource(Vector3 pos, Vector3 color, float radius = 0.2f, Smash smash = null)
+        {
+            this.Pos = pos;
+            this.Color = color * 30; //todo
+            this.Radius = radius;
+            Smash = smash;
+        }
+    }
 }

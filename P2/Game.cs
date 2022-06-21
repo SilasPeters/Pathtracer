@@ -4,6 +4,7 @@ using OpenTK;
 using System;
 using JackNSilo;
 using OpenTK.Input;
+using System.Collections.Generic;
 
 namespace Template
 {
@@ -28,6 +29,7 @@ namespace Template
 		private const float ZFar = 2000f;
 		private const float MovementSpeed = 100;
 		private const float RotationSpeed = 50f / 10;
+		public List<LightSource> LightSources = new List<LightSource>();
 
 		// Misc
 		float a = 0;				// teapot rotation angle
@@ -40,6 +42,7 @@ namespace Template
 			target = new RenderTarget( screen.width, screen.height );
 			quad = new ScreenQuad();
 			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
+			LightSources.Add(new LightSource(Vector3.UnitY, Vector3.One, 0.2f, new Smash("../../assets/teapot.obj")));
 			
 			// Pre-calculate matrices
 			// source: slides

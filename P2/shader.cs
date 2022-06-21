@@ -23,7 +23,7 @@ namespace Template
 			GL.LinkProgram( programID );
 			Console.WriteLine( GL.GetProgramInfoLog( programID ) );
 
-			// get locations of shader parameters
+			// get locations of shader parameters ///TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			attribute_vpos = GL.GetAttribLocation( programID, "vPosition" );
 			attribute_vnrm = GL.GetAttribLocation( programID, "vNormal" );
 			attribute_vuvs = GL.GetAttribLocation( programID, "vUV" );

@@ -1,5 +1,7 @@
 ﻿#version 330
- 
+/* old code
+*/
+
 // shader input
 in vec2 uv;			// interpolated texture coordinates
 in vec4 normal;			// interpolated normal
