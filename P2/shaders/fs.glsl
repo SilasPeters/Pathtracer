@@ -15,9 +15,9 @@ void main()
 {
     outputColor = texture( pixels, uv ) + 0.5f * vec4( normal.xyz, 1 );
 }
-*/
 
-/* testing code */
+/*
+// testing code 
 out vec4 FragColor;
   
 in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)  
@@ -26,3 +26,4 @@ void main()
 {
     FragColor = vertexColor;
 } 
+*/

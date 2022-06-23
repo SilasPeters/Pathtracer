@@ -28,10 +28,10 @@ namespace Template
 			Console.WriteLine( GL.GetProgramInfoLog( programID ) );
 
 			// Vertex shader
-			attribute_vpos = GL.GetAttribLocation( programID, "vertexPosition" );
-			attribute_vnrm = GL.GetAttribLocation( programID, "vertexNormal" );
-			attribute_vuvs = GL.GetAttribLocation( programID, "vertexUV" );
-			uniform_mview  = GL.GetUniformLocation( programID, "objectToScreen" );
+			attribute_vpos = GL.GetAttribLocation( programID, "vPosition" );
+			attribute_vnrm = GL.GetAttribLocation( programID, "vNormal" );
+			attribute_vuvs = GL.GetAttribLocation( programID, "vUV" );
+			uniform_mview  = GL.GetUniformLocation( programID, "transform" );
 			
 			// Fragment shader
 			attribute_fuv  = GL.GetAttribLocation( programID, "uv" );
