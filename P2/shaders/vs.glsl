@@ -1,5 +1,5 @@
 ﻿	#version 330
- 
+ // source: 2014 lecture slides
 // shader input
 in vec2 vUV;			// vertex uv coordinate
 in vec3 vNormal;		// untransformed vertex normal
