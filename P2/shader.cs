@@ -12,6 +12,10 @@ namespace Template
 		public int attribute_vnrm;
 		public int attribute_vuvs;
 		public int uniform_mview;
+		public int attribute_fuv;
+		public int attribute_fnrm;
+		public int uniform_pixels;
+		public int test;
 
 		// constructor
 		public Shader( String vertexShader, String fragmentShader )
@@ -23,11 +27,17 @@ namespace Template
 			GL.LinkProgram( programID );
 			Console.WriteLine( GL.GetProgramInfoLog( programID ) );
 
-			// get locations of shader parameters ///TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			attribute_vpos = GL.GetAttribLocation( programID, "vPosition" );
-			attribute_vnrm = GL.GetAttribLocation( programID, "vNormal" );
-			attribute_vuvs = GL.GetAttribLocation( programID, "vUV" );
-			uniform_mview = GL.GetUniformLocation( programID, "transform" );
+			// Vertex shader
+			attribute_vpos = GL.GetAttribLocation( programID, "vertexPosition" );
+			attribute_vnrm = GL.GetAttribLocation( programID, "vertexNormal" );
+			attribute_vuvs = GL.GetAttribLocation( programID, "vertexUV" );
+			uniform_mview  = GL.GetUniformLocation( programID, "objectToScreen" );
+			
+			// Fragment shader
+			attribute_fuv  = GL.GetAttribLocation( programID, "uv" );
+			attribute_fnrm = GL.GetAttribLocation( programID, "normal" );
+			uniform_pixels = GL.GetUniformLocation( programID, "pixels" );
+			test           = GL.GetAttribLocation( programID, "vertexColor" );
 		}
 
 		// loading shaders

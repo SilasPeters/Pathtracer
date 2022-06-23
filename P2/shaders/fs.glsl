@@ -15,20 +15,14 @@ void main()
 {
     outputColor = texture( pixels, uv ) + 0.5f * vec4( normal.xyz, 1 );
 }
-/* 
-// inputs
-in vec4 position; // world space
-in vec4 normal; // world space
-in vec2 uv;
-uniform vec3 cameraPosition; // world space
-uniform vec3 lightPosition; // world space
-uniform vec3 lightColor; // RGB
-uniform sampler2D tex; // diffuse color
-// output
-out vec4 color; // RGBA
-// fragment shader
+*/
+
+/* testing code */
+out vec4 FragColor;
+  
+in vec4 vertexColor; // the input variable from the vertex shader (same name and same type)  
+
 void main()
 {
-    color = ... // insert shading calculations here
-}
-*/    
+    FragColor = vertexColor;
+} 
