@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Template
 {
-	class Game
+	public class Game
 	{
 		// General member-veriables
 		private Stopwatch timer;			// timer for measuring frame duration
@@ -42,7 +42,7 @@ namespace Template
 			target = new RenderTarget( screen.width, screen.height );
 			quad = new ScreenQuad();
 			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
-			LightSources.Add(new LightSource(Vector3.UnitY, Vector3.One, 0.2f, new Smash("../../assets/teapot.obj")));
+			LightSources.Add(new LightSource(4*Vector3.One, 1000* Vector3.One, 0.2f, new Smash("../../assets/teapot.obj")));
 			
 			// Pre-calculate matrices
 			// source: slides
@@ -131,7 +131,7 @@ namespace Template
 				// render scene to render target
 				//mesh.Render( shader, Tpot * Cam.Transform.FullMatrix * Tview, wood );
 				//floor.Render( shader, Tfloor * Cam.Transform.FullMatrix * Tview, wood );
-				SceneGraph.Render();
+				SceneGraph.Render(this);
 				
 				// render quad
 				target.Unbind();

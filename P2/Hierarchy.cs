@@ -18,17 +18,17 @@ namespace JackNSilo
 	
 	public static class SceneGraph
 	{
-		private static ISmashable root = Game.Cam;
+		public static Cam root = Game.Cam;
 		
 		private static ICollection<Smash> convertedSmashes = new Collection<Smash>();
 		
-		public static void Render()
+		public static void Render(Game g)
 		{
 			convertedSmashes.Clear();
 			StoreAllWorldSpaces(Matrix4.Identity, root); // fills convertedSmashes
 
 			foreach (var Smosh in convertedSmashes)
-				Smosh.Render();
+				Smosh.Render(g);
 		}
 
 		private static void StoreAllWorldSpaces(Matrix4 parentWorldSpace, ISmashable currentSmashable)
@@ -84,10 +84,10 @@ namespace JackNSilo
 			Shader    = shader;
 		}
 
-		public void Render()
+		public void Render(Game g)
 		{
 			//Console.WriteLine(Game.ortho * LastWorldSpace * Game.perspective);
-			base.Render(Shader, LastWorldSpace * Game.perspective, Texture);
+			base.Render(Shader, LastWorldSpace * Game.perspective ,Transform.FullMatrix, Texture, g);
 		}
 
 		public void AddChild(ISmashable addition) => Children.Add(addition);
