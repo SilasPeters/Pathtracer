@@ -48,7 +48,7 @@ namespace Template
 		}
 
 		// render the mesh using the supplied shader and matrix
-		public void Render( Shader shader, Matrix4 objectToScreen, Matrix4 objectToWorld, Texture texture, Game game)
+		public void Render( Shader shader, Matrix4 objectToScreen, Matrix4 objectToWorld, Vector3 spec, Texture texture, Game game)
 		{
 			// on first run, prepare buffers
 			Prepare( shader );
@@ -74,6 +74,7 @@ namespace Template
 			GL.Uniform3(shader.uniform_lightColor, game.LightSources[0].Color);
 			GL.Uniform3(shader.uniform_ambientLight, 0.15f* Vector3.One);
 			GL.Uniform3(shader.uniform_camPosition, SceneGraph.root.Transform.LocalPosVector);
+			GL.Uniform3(shader.uniform_specularCo, spec);
 
 			// enable position, normal and uv attributes
 			GL.EnableVertexAttribArray( shader.attribute_vpos );

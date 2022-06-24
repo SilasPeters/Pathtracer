@@ -21,6 +21,7 @@ namespace Template
 		public int uniform_lightColor;
 		public int uniform_camPosition;
 		public int uniform_ambientLight;
+		public int uniform_specularCo;
 
 		// constructor
 		public Shader( String vertexShader, String fragmentShader )
@@ -48,6 +49,7 @@ namespace Template
 			uniform_ambientLight = GL.GetUniformLocation(programID, "ambientLight");
 			uniform_lightPosition = GL.GetUniformLocation(programID, "lightPosition");
 			uniform_lightColor = GL.GetUniformLocation(programID, "lightColor");
+			uniform_specularCo = GL.GetUniformLocation(programID, "specularCo");
 		}
 
 		// loading shaders

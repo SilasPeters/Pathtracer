@@ -59,8 +59,9 @@ namespace JackNSilo
 		public Template.Texture Texture;
 		public Template.Shader Shader;
 		public Matrix4 LastWorldSpace;
-		
-		// Fields for implementing ISmashable
+		public Vector3 SpecularCo = Vector3.UnitZ * 3;
+
+			// Fields for implementing ISmashable
 		public Transform               Transform { get; set; }
 		public ICollection<ISmashable> Children  { get; set; } // This was not intended
 		public bool                    Enabled   { get; set; }
@@ -87,7 +88,7 @@ namespace JackNSilo
 		public void Render(Game g)
 		{
 			//Console.WriteLine(Game.ortho * LastWorldSpace * Game.perspective);
-			base.Render(Shader, LastWorldSpace * Game.perspective ,Transform.FullMatrix, Texture, g);
+			base.Render(Shader, LastWorldSpace * Game.perspective ,Transform.FullMatrix, SpecularCo, Texture, g);
 		}
 
 		public void AddChild(ISmashable addition) => Children.Add(addition);

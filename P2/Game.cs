@@ -42,7 +42,7 @@ namespace Template
 			target = new RenderTarget( screen.width, screen.height );
 			quad = new ScreenQuad();
 			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
-			LightSources.Add(new LightSource(4*Vector3.One, 1000* Vector3.One, 0.2f, new Smash("../../assets/teapot.obj")));
+			LightSources.Add(new LightSource(4*Vector3.One, 10* Vector3.One, 0.2f, new Smash("../../assets/teapot.obj")));
 			
 			// Pre-calculate matrices
 			// source: slides
